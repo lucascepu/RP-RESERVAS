@@ -45,6 +45,7 @@ export default async function Home() {
             href="/riesgo-pais"
             accentColor="#a78bfa"
             invertLogic={true}
+            showRange={true}
           />
         ) : <CardError label="Riesgo País" />}
 
@@ -53,26 +54,25 @@ export default async function Home() {
             label="Reservas Brutas"
             value={(resData.ultimo / 1000).toFixed(1)}
             unit="USD MM"
-            variacion={resData.variacion}
+            variacion={Math.round(resData.variacion / 1000 * 10) / 10}
             variacionPct={resData.variacionPct}
-            min12m={Math.round(resData.min12m / 1000)}
-            max12m={Math.round(resData.max12m / 1000)}
             href="/reservas"
             accentColor="var(--accent)"
+            showRange={false}
           />
         ) : <CardError label="Reservas" />}
 
         {compData ? (
           <KpiCard
-            label="Compras BCRA (diarias)"
-            value={compData.ultimo.toLocaleString('es-AR')}
-            unit="USD MM"
-            variacion={compData.variacion}
-            variacionPct={compData.variacionPct}
-            min12m={compData.min12m}
-            max12m={compData.max12m}
+            label="Compras BCRA"
+            value={compData.hoy >= 0 ? '+' + compData.hoy.toLocaleString('es-AR') : compData.hoy.toLocaleString('es-AR')}
+            unit="USD MM hoy"
+            variacion={compData.hoy}
+            variacionPct={0}
             href="/compras"
             accentColor="var(--green)"
+            showRange={false}
+            subInfo={`Junio: +${compData.acumMes.toLocaleString('es-AR')} MM · 2026: +${compData.acumAnio.toLocaleString('es-AR')} MM`}
           />
         ) : <CardError label="Compras BCRA" />}
       </section>
