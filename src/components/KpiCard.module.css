@@ -27,7 +27,7 @@
   letter-spacing: 0.1em;
   color: var(--text-tertiary);
   margin-bottom: 12px;
-  font-family: 'Roboto Mono', monospace;
+  font-family: 'Inter', sans-serif;
 }
 
 .valueRow {
@@ -39,7 +39,7 @@
 }
 
 .value {
-  font-family: 'Roboto Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 34px;
   font-weight: 500;
   color: var(--text-primary);
@@ -49,11 +49,11 @@
 .unit {
   font-size: 13px;
   color: var(--text-secondary);
-  font-family: 'Roboto Mono', monospace;
+  font-family: 'Inter', sans-serif;
 }
 
 .inlineDelta {
-  font-family: 'Roboto Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 15px;
   font-weight: 500;
   margin-left: 2px;
@@ -62,7 +62,7 @@
 .pctRow {
   font-size: 13px;
   margin-bottom: 12px;
-  font-family: 'Roboto Mono', monospace;
+  font-family: 'Inter', sans-serif;
 }
 
 .subInfo {
@@ -72,7 +72,7 @@
   padding-top: 10px;
   margin-top: 4px;
   line-height: 1.7;
-  font-family: 'Roboto Mono', monospace;
+  font-family: 'Inter', sans-serif;
 }
 
 .subInfo2 {
@@ -80,5 +80,5 @@
   color: var(--text-tertiary);
   margin-top: 5px;
   line-height: 1.6;
-  font-family: 'Roboto Mono', monospace;
+  font-family: 'Inter', sans-serif;
 }
