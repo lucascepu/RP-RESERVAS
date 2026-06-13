@@ -26,7 +26,6 @@ export interface ComprasSummary {
   fechaHoy: string;
   acumMes: number;
   acumAnio: number;
-  ruedasConsecutivas: number;
   serie: DataPoint[];
 }
 
@@ -130,7 +129,7 @@ export async function getReservas() {
 export async function getCompras(): Promise<ComprasSummary> {
   const serie = await fetchBCRA(74, 400);
   if (serie.length < 2) {
-    return { hoy: 0, fechaHoy: toISO(new Date()), acumMes: 0, acumAnio: 0, ruedasConsecutivas: 0, serie: [] };
+    return { hoy: 0, fechaHoy: toISO(new Date()), acumMes: 0, acumAnio: 0, serie: [] };
   }
 
   const hoy = new Date();
@@ -147,7 +146,6 @@ export async function getCompras(): Promise<ComprasSummary> {
   const puntoInicioAnio = serie.find(d => d.fecha >= inicioAnio);
   const acumAnio = puntoInicioAnio ? Math.round((last.valor - puntoInicioAnio.valor) * 100) / 100 : last.valor;
 
-  // Calcular ruedas consecutivas comprando (variacion diaria > 0)
   const serieDaily: DataPoint[] = [];
   for (let i = 1; i < serie.length; i++) {
     serieDaily.push({
@@ -156,11 +154,5 @@ export async function getCompras(): Promise<ComprasSummary> {
     });
   }
 
-  let ruedasConsecutivas = 0;
-  for (let i = serieDaily.length - 1; i >= 0; i--) {
-    if (serieDaily[i].valor > 0) ruedasConsecutivas++;
-    else break;
-  }
-
-  return { hoy: compraDiaria, fechaHoy: last.fecha, acumMes, acumAnio, ruedasConsecutivas, serie: serieDaily };
+  return { hoy: compraDiaria, fechaHoy: last.fecha, acumMes, acumAnio, serie: serieDaily };
 }
