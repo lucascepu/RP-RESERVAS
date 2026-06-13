@@ -16,6 +16,14 @@ export interface IndicadorSummary {
   serie: DataPoint[];
 }
 
+export interface ComprasSummary {
+  hoy: number;
+  fechaHoy: string;
+  acumMes: number;
+  acumAnio: number;
+  serie: DataPoint[];
+}
+
 function toISO(date: Date) {
   return date.toISOString().slice(0, 10);
 }
@@ -67,19 +75,6 @@ function buildSummary(serie: DataPoint[]): IndicadorSummary {
   };
 }
 
-// Convierte serie acumulada en serie de variaciones diarias
-function acumToDaily(serie: DataPoint[]): DataPoint[] {
-  if (serie.length < 2) return serie;
-  const result: DataPoint[] = [];
-  for (let i = 1; i < serie.length; i++) {
-    result.push({
-      fecha: serie[i].fecha,
-      valor: Math.round((serie[i].valor - serie[i - 1].valor) * 100) / 100,
-    });
-  }
-  return result;
-}
-
 export async function getReservas(dias = 365) {
   const serie = await fetchBCRA(1, dias);
   return buildSummary(serie);
@@ -90,9 +85,48 @@ export async function getRiesgoPais(dias = 365) {
   return buildSummary(serie);
 }
 
-export async function getCompras(dias = 365) {
-  // idVariable 74: posición neta acumulada → convertimos a compra diaria
-  const serie = await fetchBCRA(74, dias + 1);
-  const daily = acumToDaily(serie);
-  return buildSummary(daily);
+export async function getCompras(): Promise<ComprasSummary> {
+  // idVariable 74: posición neta acumulada anual en USD MM
+  const serie = await fetchBCRA(74, 400);
+  if (serie.length < 2) throw new Error('Serie compras vacía');
+
+  const hoy = new Date();
+  const inicioMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
+  const inicioAnio = `${hoy.getFullYear()}-01-01`;
+
+  // El último valor es el acumulado anual
+  const last = serie[serie.length - 1];
+  const prev = serie[serie.length - 2];
+
+  // Compra diaria = diferencia entre hoy y ayer
+  const compraDiaria = Math.round((last.valor - prev.valor) * 100) / 100;
+
+  // Acumulado del mes = valor hoy - valor al inicio del mes
+  const puntoInicioMes = serie.filter(d => d.fecha >= inicioMes)[0];
+  const acumMes = puntoInicioMes
+    ? Math.round((last.valor - puntoInicioMes.valor + (puntoInicioMes ? compraDiaria : 0)) * 100) / 100
+    : last.valor;
+
+  // Acumulado anual = valor hoy - valor al inicio del año (o directamente el acumulado si la serie empieza en enero)
+  const puntoInicioAnio = serie.filter(d => d.fecha >= inicioAnio)[0];
+  const acumAnio = puntoInicioAnio
+    ? Math.round((last.valor - puntoInicioAnio.valor) * 100) / 100
+    : last.valor;
+
+  // Serie diaria para el gráfico
+  const serieDaily: DataPoint[] = [];
+  for (let i = 1; i < serie.length; i++) {
+    serieDaily.push({
+      fecha: serie[i].fecha,
+      valor: Math.round((serie[i].valor - serie[i - 1].valor) * 100) / 100,
+    });
+  }
+
+  return {
+    hoy: compraDiaria,
+    fechaHoy: last.fecha,
+    acumMes,
+    acumAnio,
+    serie: serieDaily,
+  };
 }
