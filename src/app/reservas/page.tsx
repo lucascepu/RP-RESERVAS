@@ -5,7 +5,7 @@ import DetallePage from '@/components/DetallePage';
 export const revalidate = 3600;
 
 export default async function ReservasPage() {
-  const data = await getReservas(365);
+  const data = await getReservas();
   const hitos = HITOS.filter(h => h.indicador === 'reservas' || h.indicador === 'global');
 
   return (
