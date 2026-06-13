@@ -23,7 +23,7 @@ export default async function Home() {
           <h1 className={styles.title}>
             <span className="mono">RP + Reservas</span>
           </h1>
-          <p className={styles.sub}>Riesgo País · Reservas BCRA · Compras de divisas</p>
+          <p className={styles.sub}>Riesgo País · Reservas BCRA · Compras de divisas · Argentina</p>
         </div>
         {rpData && (
           <div className={styles.updated}>
@@ -100,3 +100,4 @@ function CardError({ label }: { label: string }) {
     </div>
   );
 }
+
