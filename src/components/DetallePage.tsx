@@ -187,6 +187,10 @@ export default function DetallePage({
               tickLine={false}
               axisLine={false}
               width={65}
+              tickFormatter={(v: number) => {
+                if (Math.abs(v) >= 1000) return (v / 1000).toFixed(v % 1000 === 0 ? 0 : 1) + 'k';
+                return v.toString();
+              }}
             />
             <Tooltip
               contentStyle={{
