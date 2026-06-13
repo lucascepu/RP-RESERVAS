@@ -48,6 +48,7 @@ function shortDate(iso: string, totalDias: number) {
   const [y, m, d] = iso.split('-');
   const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
   if (totalDias > 365 * 2) return `${meses[parseInt(m) - 1]} ${y}`;
+  if (totalDias > 90) return `${meses[parseInt(m) - 1]} ${y.slice(2)}`;
   return `${parseInt(d)} ${meses[parseInt(m) - 1]}`;
 }
 
@@ -64,7 +65,7 @@ interface Props {
 export default function DetallePage({
   titulo, subtitulo, data, hitos, accentColor, tipo, back,
 }: Props) {
-  const [rangoIdx, setRangoIdx] = useState(3); // default 1A
+  const [rangoIdx, setRangoIdx] = useState(3);
   const [customDesde, setCustomDesde] = useState('');
   const [customHasta, setCustomHasta] = useState('');
   const [modoCustom, setModoCustom] = useState(false);
@@ -161,38 +162,41 @@ export default function DetallePage({
       )}
 
       <div className={styles.chartWrap}>
-        <ResponsiveContainer width="100%" height={320}>
-          <AreaChart data={serie} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+        <ResponsiveContainer width="100%" height={340}>
+          <AreaChart data={serie} margin={{ top: 8, right: 8, bottom: 40, left: 0 }}>
             <defs>
               <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={accentColor} stopOpacity={0.15} />
+                <stop offset="5%" stopColor={accentColor} stopOpacity={0.18} />
                 <stop offset="95%" stopColor={accentColor} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
+            <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
             <XAxis
               dataKey="fecha"
-              tick={{ fontSize: 10, fill: '#484f58', fontFamily: 'IBM Plex Mono' }}
+              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'DM Mono' }}
               tickLine={false}
               axisLine={false}
               tickFormatter={(v) => shortDate(v, totalDias)}
               interval="preserveStartEnd"
+              angle={-35}
+              textAnchor="end"
+              height={50}
             />
             <YAxis
-              tick={{ fontSize: 10, fill: '#484f58', fontFamily: 'IBM Plex Mono' }}
+              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'DM Mono' }}
               tickLine={false}
               axisLine={false}
-              width={60}
+              width={65}
             />
             <Tooltip
               contentStyle={{
-                background: '#161b22',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: '#13181f',
+                border: '1px solid rgba(255,255,255,0.14)',
                 borderRadius: 8,
-                fontSize: 12,
-                fontFamily: 'IBM Plex Mono',
+                fontSize: 13,
+                fontFamily: 'DM Mono',
               }}
-              labelStyle={{ color: '#8b949e', marginBottom: 4 }}
+              labelStyle={{ color: '#adbac7', marginBottom: 4 }}
               itemStyle={{ color: accentColor }}
               labelFormatter={(v: string) => formatFecha(v)}
               formatter={(v: number) => [formatValor(tipo, v), '']}
