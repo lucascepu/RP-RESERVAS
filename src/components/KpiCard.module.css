@@ -1,0 +1,83 @@
+.card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  overflow: hidden;
+  transition: border-color 0.15s, background 0.15s;
+  cursor: pointer;
+  display: block;
+}
+
+.card:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-hover);
+}
+
+.accent {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+
+.label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+.valueRow {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.unit {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.delta {
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.up { color: var(--green); }
+.down { color: var(--red); }
+
+.barWrap { margin-top: auto; }
+
+.barLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-family: 'IBM Plex Mono', monospace;
+  margin-bottom: 4px;
+}
+
+.barTitle { color: var(--text-tertiary); }
+
+.track {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 2px;
+}
