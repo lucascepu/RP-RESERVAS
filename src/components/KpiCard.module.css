@@ -22,7 +22,7 @@
 }
 
 .label {
-  font-size: 11px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--text-tertiary);
@@ -39,40 +39,40 @@
 
 .value {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 500;
   color: var(--text-primary);
   line-height: 1;
 }
 
 .unit {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 
 .inlineDelta {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   margin-left: 4px;
 }
 
 .pctRow {
-  font-size: 12px;
+  font-size: 13px;
   margin-bottom: 10px;
 }
 
 .subInfo {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   border-top: 1px solid var(--border);
   padding-top: 8px;
-  margin-top: 2px;
+  margin-top: 4px;
   line-height: 1.6;
 }
 
 .subInfo2 {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-tertiary);
   margin-top: 4px;
   line-height: 1.6;
