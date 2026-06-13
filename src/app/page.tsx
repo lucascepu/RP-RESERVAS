@@ -43,7 +43,8 @@ export default async function Home() {
             min12m={rpData.min12m}
             max12m={rpData.max12m}
             href="/riesgo-pais"
-            accentColor="var(--red)"
+            accentColor="#a78bfa"
+            invertLogic={true}
           />
         ) : <CardError label="Riesgo País" />}
 
@@ -63,7 +64,7 @@ export default async function Home() {
 
         {compData ? (
           <KpiCard
-            label="Compras BCRA"
+            label="Compras BCRA (diarias)"
             value={compData.ultimo.toLocaleString('es-AR')}
             unit="USD MM"
             variacion={compData.variacion}
@@ -100,4 +101,3 @@ function CardError({ label }: { label: string }) {
     </div>
   );
 }
-
