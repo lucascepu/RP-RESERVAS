@@ -98,7 +98,7 @@ function CardError({ label }: { label: string }) {
       color: 'var(--text-tertiary)',
       fontSize: 13,
     }}>
-      <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8, fontFamily: 'DM Mono, monospace' }}>
+      <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8, fontFamily: 'Geist Mono, monospace' }}>
         {label}
       </div>
       Sin datos disponibles
