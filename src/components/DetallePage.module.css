@@ -58,6 +58,7 @@
 
 .rangeRow {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 1rem;
 }
@@ -83,6 +84,38 @@
   background: var(--bg-hover);
   border-color: var(--border-hover);
   color: var(--text-primary);
+}
+
+.customRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.customLabel {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.dateInput {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  padding: 4px 8px;
+  outline: none;
+  cursor: pointer;
+}
+
+.dateInput:focus {
+  border-color: var(--border-hover);
 }
 
 .chartWrap { margin-bottom: 2rem; }
