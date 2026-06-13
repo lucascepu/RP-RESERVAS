@@ -16,6 +16,8 @@ export interface IndicadorSummary {
   variacionPct: number;
   min12m: number;
   max12m: number;
+  ytd: number;
+  mtd: number;
   serie: DataPoint[];
 }
 
@@ -44,6 +46,17 @@ function buildSummary(serie: DataPoint[]): IndicadorSummary {
   const desde12m = hace(365);
   const serie12m = serie.filter(d => d.fecha >= desde12m);
   const valores12m = serie12m.length ? serie12m.map(d => d.valor) : serie.map(d => d.valor);
+
+  const hoy = new Date();
+  const inicioAnio = `${hoy.getFullYear()}-01-01`;
+  const inicioMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
+
+  const puntoInicioAnio = [...serie].reverse().find(d => d.fecha < inicioAnio);
+  const puntoInicioMes = [...serie].reverse().find(d => d.fecha < inicioMes);
+
+  const ytd = puntoInicioAnio ? last.valor - puntoInicioAnio.valor : 0;
+  const mtd = puntoInicioMes ? last.valor - puntoInicioMes.valor : 0;
+
   return {
     ultimo: last.valor,
     fecha: last.fecha,
@@ -51,11 +64,12 @@ function buildSummary(serie: DataPoint[]): IndicadorSummary {
     variacionPct: prev.valor !== 0 ? ((last.valor - prev.valor) / prev.valor) * 100 : 0,
     min12m: Math.min(...valores12m),
     max12m: Math.max(...valores12m),
+    ytd: Math.round(ytd * 10) / 10,
+    mtd: Math.round(mtd * 10) / 10,
     serie,
   };
 }
 
-// Combina historico local con datos frescos de la API
 async function mergeWithAPI<T extends {f: string; v: number}>(
   historico: T[],
   fetchFresh: () => Promise<DataPoint[]>
@@ -63,7 +77,6 @@ async function mergeWithAPI<T extends {f: string; v: number}>(
   const localSerie: DataPoint[] = historico
     .map(d => ({ fecha: d.f, valor: d.v }))
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
-
   try {
     const fresh = await fetchFresh();
     const lastLocal = localSerie[localSerie.length - 1]?.fecha ?? '';
@@ -118,25 +131,16 @@ export async function getCompras(): Promise<ComprasSummary> {
   if (serie.length < 2) {
     return { hoy: 0, fechaHoy: toISO(new Date()), acumMes: 0, acumAnio: 0, serie: [] };
   }
-
   const hoy = new Date();
   const inicioMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
   const inicioAnio = `${hoy.getFullYear()}-01-01`;
-
   const last = serie[serie.length - 1];
   const prev = serie[serie.length - 2];
   const compraDiaria = Math.round((last.valor - prev.valor) * 100) / 100;
-
   const puntoInicioMes = serie.find(d => d.fecha >= inicioMes);
-  const acumMes = puntoInicioMes
-    ? Math.round((last.valor - puntoInicioMes.valor) * 100) / 100
-    : last.valor;
-
+  const acumMes = puntoInicioMes ? Math.round((last.valor - puntoInicioMes.valor) * 100) / 100 : last.valor;
   const puntoInicioAnio = serie.find(d => d.fecha >= inicioAnio);
-  const acumAnio = puntoInicioAnio
-    ? Math.round((last.valor - puntoInicioAnio.valor) * 100) / 100
-    : last.valor;
-
+  const acumAnio = puntoInicioAnio ? Math.round((last.valor - puntoInicioAnio.valor) * 100) / 100 : last.valor;
   const serieDaily: DataPoint[] = [];
   for (let i = 1; i < serie.length; i++) {
     serieDaily.push({
@@ -144,6 +148,5 @@ export async function getCompras(): Promise<ComprasSummary> {
       valor: Math.round((serie[i].valor - serie[i - 1].valor) * 100) / 100,
     });
   }
-
   return { hoy: compraDiaria, fechaHoy: last.fecha, acumMes, acumAnio, serie: serieDaily };
 }
