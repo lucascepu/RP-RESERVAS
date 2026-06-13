@@ -15,8 +15,10 @@ export default async function ComprasPage() {
     fecha: data.fechaHoy,
     variacion: data.hoy,
     variacionPct: 0,
-    min12m: Math.min(...valores),
-    max12m: Math.max(...valores),
+    min12m: valores.length ? Math.min(...valores) : 0,
+    max12m: valores.length ? Math.max(...valores) : 0,
+    ytd: data.acumAnio,
+    mtd: data.acumMes,
     serie: data.serie,
   };
 
