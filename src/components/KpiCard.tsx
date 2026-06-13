@@ -5,18 +5,20 @@ interface Props {
   label: string;
   value: string;
   unit: string;
-  variacion: number;
-  variacionPct: number;
+  variacion?: number;
+  variacionPct?: number;
   href: string;
   accentColor: string;
   invertLogic?: boolean;
   subInfo?: string;
   subInfo2?: string;
+  hideVariacion?: boolean;
 }
 
 export default function KpiCard({
-  label, value, unit, variacion, variacionPct,
-  href, accentColor, invertLogic = false, subInfo, subInfo2,
+  label, value, unit, variacion = 0, variacionPct = 0,
+  href, accentColor, invertLogic = false,
+  subInfo, subInfo2, hideVariacion = false,
 }: Props) {
   const sube = variacion >= 0;
   const esBueno = invertLogic ? !sube : sube;
@@ -30,16 +32,23 @@ export default function KpiCard({
     <Link href={href} className={styles.card}>
       <div className={styles.accent} style={{ background: accentColor }} />
       <div className={styles.label}>{label}</div>
+
       <div className={styles.valueRow}>
         <span className={styles.value}>{value}</span>
         <span className={styles.unit}>{unit}</span>
-        <span className={styles.inlineDelta} style={{ color: deltaColor }}>
-          {sube ? '▲' : '▼'} {variacionFmt}
-        </span>
+        {!hideVariacion && (
+          <span className={styles.inlineDelta} style={{ color: deltaColor }}>
+            {sube ? '▲' : '▼'} {variacionFmt}
+          </span>
+        )}
       </div>
-      <div className={styles.pctRow} style={{ color: deltaColor }}>
-        {sube ? '▲' : '▼'} {Math.abs(variacionPct).toFixed(1)}% vs rueda anterior
-      </div>
+
+      {!hideVariacion && (
+        <div className={styles.pctRow} style={{ color: deltaColor }}>
+          {sube ? '▲' : '▼'} {Math.abs(variacionPct).toFixed(1)}% vs rueda anterior
+        </div>
+      )}
+
       {subInfo && (
         <div className={styles.subInfo}>{subInfo}</div>
       )}
