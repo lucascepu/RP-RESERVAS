@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import {
   ResponsiveContainer, AreaChart, Area,
-  XAxis, YAxis, Tooltip, ReferenceLine, CartesianGrid,
+  XAxis, YAxis, Tooltip, CartesianGrid,
 } from 'recharts';
 import { useState, useMemo } from 'react';
 import type { IndicadorSummary } from '@/lib/data';
@@ -205,15 +205,6 @@ export default function DetallePage({
               labelFormatter={(v: string) => formatFecha(v)}
               formatter={(v: number) => [formatValor(tipo, v), '']}
             />
-            {hitosEnRango.map(h => (
-              <ReferenceLine
-                key={h.id}
-                x={h.fecha}
-                stroke={TAG_COLORS[h.tag]}
-                strokeDasharray="3 3"
-                strokeOpacity={0.6}
-              />
-            ))}
             <Area
               type="monotone"
               dataKey="valor"
