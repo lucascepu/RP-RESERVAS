@@ -14,7 +14,7 @@ export default async function RiesgoPaisPage() {
       subtitulo="EMBI · JP Morgan · puntos básicos"
       data={data}
       hitos={hitos}
-      accentColor="var(--red)"
+      accentColor="#a78bfa"
       tipo="riesgo-pais"
       back="/"
     />
