@@ -27,6 +27,9 @@ const TAG_COLORS: Record<string, string> = {
   bcra: '#3fb950',
 };
 
+// Para riesgo pais: baja = bueno (verde), sube = malo (rojo)
+const INVERT_LOGIC: IndicadorTipo[] = ['riesgo-pais'];
+
 function formatValor(tipo: IndicadorTipo, v: number): string {
   if (tipo === 'riesgo-pais') return v.toLocaleString('es-AR') + ' pbs';
   if (tipo === 'reservas') return 'USD ' + (v / 1000).toFixed(1) + ' MM';
@@ -73,6 +76,9 @@ export default function DetallePage({
   }));
 
   const sube = data.variacion >= 0;
+  const invertLogic = INVERT_LOGIC.includes(tipo);
+  const esBueno = invertLogic ? !sube : sube;
+  const deltaColor = esBueno ? 'var(--green)' : 'var(--red)';
 
   return (
     <main className={styles.main}>
@@ -89,7 +95,7 @@ export default function DetallePage({
           <div className={styles.kpiValue} style={{ color: accentColor }}>
             {formatValor(tipo, data.ultimo)}
           </div>
-          <div className={`${styles.kpiDelta} ${sube ? styles.up : styles.down}`}>
+          <div className={styles.kpiDelta} style={{ color: deltaColor }}>
             {sube ? '▲' : '▼'} {Math.abs(data.variacionPct).toFixed(1)}% vs rueda anterior
           </div>
           <div className={styles.kpiFecha}>al {formatFecha(data.fecha)}</div>
