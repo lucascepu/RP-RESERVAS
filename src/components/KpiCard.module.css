@@ -3,7 +3,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 1.25rem;
+  padding: 1.4rem;
   overflow: hidden;
   transition: border-color 0.15s, background 0.15s;
   cursor: pointer;
@@ -22,24 +22,25 @@
 }
 
 .label {
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.1em;
   color: var(--text-tertiary);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  font-family: 'DM Mono', monospace;
 }
 
 .valueRow {
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  margin-bottom: 4px;
+  gap: 8px;
+  margin-bottom: 5px;
   flex-wrap: wrap;
 }
 
 .value {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 32px;
+  font-family: 'DM Mono', monospace;
+  font-size: 34px;
   font-weight: 500;
   color: var(--text-primary);
   line-height: 1;
@@ -48,32 +49,36 @@
 .unit {
   font-size: 13px;
   color: var(--text-secondary);
+  font-family: 'DM Mono', monospace;
 }
 
 .inlineDelta {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'DM Mono', monospace;
   font-size: 15px;
   font-weight: 500;
-  margin-left: 4px;
+  margin-left: 2px;
 }
 
 .pctRow {
   font-size: 13px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  font-family: 'DM Mono', monospace;
 }
 
 .subInfo {
   font-size: 13px;
   color: var(--text-secondary);
   border-top: 1px solid var(--border);
-  padding-top: 8px;
+  padding-top: 10px;
   margin-top: 4px;
-  line-height: 1.6;
+  line-height: 1.7;
+  font-family: 'DM Mono', monospace;
 }
 
 .subInfo2 {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-tertiary);
-  margin-top: 4px;
+  margin-top: 5px;
   line-height: 1.6;
+  font-family: 'DM Mono', monospace;
 }
