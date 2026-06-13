@@ -7,7 +7,7 @@ export const revalidate = 3600;
 
 function fmtDelta(v: number, unit = 'MM') {
   const sign = v >= 0 ? '+' : '';
-  return `${sign}${v.toLocaleString('es-AR')} ${unit}`;
+  return `${sign}${Math.round(v).toLocaleString('es-AR')} ${unit}`;
 }
 
 export default async function Home() {
@@ -57,25 +57,24 @@ export default async function Home() {
             label="Reservas Brutas"
             value={(resData.ultimo / 1000).toFixed(1)}
             unit="USD MM"
-            variacion={Math.round(resData.variacion / 1000 * 10) / 10}
+            variacion={Math.round(resData.variacion)}
             variacionPct={resData.variacionPct}
             href="/reservas"
             accentColor="var(--accent)"
-            subInfo={`MTD: ${fmtDelta(Math.round(resData.mtd), 'MM')} · YTD: ${fmtDelta(Math.round(resData.ytd), 'MM')}`}
+            subInfo={`MTD: ${fmtDelta(resData.mtd)} · YTD: ${fmtDelta(resData.ytd)}`}
           />
         ) : <CardError label="Reservas" />}
 
         {compData ? (
           <KpiCard
             label="Compras BCRA"
-            value={compData.hoy >= 0 ? '+' + compData.hoy.toLocaleString('es-AR') : compData.hoy.toLocaleString('es-AR')}
-            unit="USD MM hoy"
-            variacion={compData.hoy}
-            variacionPct={0}
+            value={`+${compData.acumAnio.toLocaleString('es-AR')}`}
+            unit="MM acum. 2026"
             href="/compras"
             accentColor="var(--green)"
+            hideVariacion={true}
             subInfo={`Junio: +${compData.acumMes.toLocaleString('es-AR')} MM`}
-            subInfo2={`Acum. 2026: +${compData.acumAnio.toLocaleString('es-AR')} MM`}
+            subInfo2={`${compData.ruedasConsecutivas} ruedas consecutivas comprando`}
           />
         ) : <CardError label="Compras BCRA" />}
       </section>
