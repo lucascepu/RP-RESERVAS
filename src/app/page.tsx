@@ -21,6 +21,8 @@ export default async function Home() {
   const resData = reservas.status === 'fulfilled' ? reservas.value : null;
   const compData = compras.status === 'fulfilled' ? compras.value : null;
 
+  const hoyStr = new Date().toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
+
   return (
     <main className={styles.main}>
       <header className={styles.header}>
@@ -68,13 +70,13 @@ export default async function Home() {
         {compData ? (
           <KpiCard
             label="Compras BCRA"
-            value={`+${compData.acumAnio.toLocaleString('es-AR')}`}
-            unit="MM acum. 2026"
+            value={compData.hoy > 0 ? `+${compData.hoy.toLocaleString('es-AR')}` : compData.hoy.toLocaleString('es-AR')}
+            unit="USD MM hoy"
             href="/compras"
             accentColor="var(--green)"
             hideVariacion={true}
-            subInfo={`Junio: +${compData.acumMes.toLocaleString('es-AR')} MM`}
-            subInfo2={`${compData.ruedasConsecutivas} ruedas consecutivas comprando`}
+            subInfo={`${hoyStr}: +${compData.acumMes.toLocaleString('es-AR')} MM`}
+            subInfo2={`Acum. 2026: +${compData.acumAnio.toLocaleString('es-AR')} MM`}
           />
         ) : <CardError label="Compras BCRA" />}
       </section>
@@ -92,11 +94,11 @@ function CardError({ label }: { label: string }) {
       background: 'var(--bg-card)',
       border: '1px solid var(--border)',
       borderRadius: 12,
-      padding: '1.25rem',
+      padding: '1.4rem',
       color: 'var(--text-tertiary)',
       fontSize: 13,
     }}>
-      <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>
+      <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8, fontFamily: 'DM Mono, monospace' }}>
         {label}
       </div>
       Sin datos disponibles
