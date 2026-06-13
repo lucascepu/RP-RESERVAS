@@ -67,6 +67,19 @@ function buildSummary(serie: DataPoint[]): IndicadorSummary {
   };
 }
 
+// Convierte serie acumulada en serie de variaciones diarias
+function acumToDaily(serie: DataPoint[]): DataPoint[] {
+  if (serie.length < 2) return serie;
+  const result: DataPoint[] = [];
+  for (let i = 1; i < serie.length; i++) {
+    result.push({
+      fecha: serie[i].fecha,
+      valor: Math.round((serie[i].valor - serie[i - 1].valor) * 100) / 100,
+    });
+  }
+  return result;
+}
+
 export async function getReservas(dias = 365) {
   const serie = await fetchBCRA(1, dias);
   return buildSummary(serie);
@@ -78,6 +91,8 @@ export async function getRiesgoPais(dias = 365) {
 }
 
 export async function getCompras(dias = 365) {
-  const serie = await fetchBCRA(74, dias);
-  return buildSummary(serie);
+  // idVariable 74: posición neta acumulada → convertimos a compra diaria
+  const serie = await fetchBCRA(74, dias + 1);
+  const daily = acumToDaily(serie);
+  return buildSummary(daily);
 }
