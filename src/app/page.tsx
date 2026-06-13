@@ -5,6 +5,11 @@ import styles from './page.module.css';
 
 export const revalidate = 3600;
 
+function fmtDelta(v: number, unit = 'MM') {
+  const sign = v >= 0 ? '+' : '';
+  return `${sign}${v.toLocaleString('es-AR')} ${unit}`;
+}
+
 export default async function Home() {
   const [rp, reservas, compras] = await Promise.allSettled([
     getRiesgoPais(),
@@ -40,12 +45,10 @@ export default async function Home() {
             unit="pbs"
             variacion={rpData.variacion}
             variacionPct={rpData.variacionPct}
-            min12m={rpData.min12m}
-            max12m={rpData.max12m}
             href="/riesgo-pais"
             accentColor="#a78bfa"
             invertLogic={true}
-            showRange={true}
+            subInfo={`YTD: ${fmtDelta(rpData.ytd, 'pbs')} · MTD: ${fmtDelta(rpData.mtd, 'pbs')}`}
           />
         ) : <CardError label="Riesgo País" />}
 
@@ -58,7 +61,7 @@ export default async function Home() {
             variacionPct={resData.variacionPct}
             href="/reservas"
             accentColor="var(--accent)"
-            showRange={false}
+            subInfo={`MTD: ${fmtDelta(Math.round(resData.mtd), 'MM')} · YTD: ${fmtDelta(Math.round(resData.ytd), 'MM')}`}
           />
         ) : <CardError label="Reservas" />}
 
@@ -71,8 +74,8 @@ export default async function Home() {
             variacionPct={0}
             href="/compras"
             accentColor="var(--green)"
-            showRange={false}
-            subInfo={`Junio: +${compData.acumMes.toLocaleString('es-AR')} MM · 2026: +${compData.acumAnio.toLocaleString('es-AR')} MM`}
+            subInfo={`Junio: +${compData.acumMes.toLocaleString('es-AR')} MM`}
+            subInfo2={`Acum. 2026: +${compData.acumAnio.toLocaleString('es-AR')} MM`}
           />
         ) : <CardError label="Compras BCRA" />}
       </section>
