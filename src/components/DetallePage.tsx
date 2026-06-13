@@ -173,7 +173,7 @@ export default function DetallePage({
             <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
             <XAxis
               dataKey="fecha"
-              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Roboto Mono' }}
+              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
               tickLine={false}
               axisLine={false}
               tickFormatter={(v) => shortDate(v, totalDias)}
@@ -183,7 +183,7 @@ export default function DetallePage({
               height={50}
             />
             <YAxis
-              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Roboto Mono' }}
+              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
               tickLine={false}
               axisLine={false}
               width={65}
@@ -198,7 +198,7 @@ export default function DetallePage({
                 border: '1px solid rgba(255,255,255,0.14)',
                 borderRadius: 8,
                 fontSize: 13,
-                fontFamily: 'Roboto Mono',
+                fontFamily: 'Inter',
               }}
               labelStyle={{ color: '#adbac7', marginBottom: 4 }}
               itemStyle={{ color: accentColor }}
