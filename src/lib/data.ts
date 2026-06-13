@@ -1,3 +1,6 @@
+import rpHistorico from '@/data/riesgo-pais.json';
+import resHistorico from '@/data/reservas.json';
+
 const BCRA_BASE = 'https://api.bcra.gob.ar/estadisticas/v4.0/monetarias';
 const AR_DATOS_BASE = 'https://api.argentinadatos.com/v1';
 
@@ -34,12 +37,59 @@ function hace(dias: number) {
   return toISO(d);
 }
 
-async function fetchBCRA(idVariable: number, dias = 365): Promise<DataPoint[]> {
+function buildSummary(serie: DataPoint[]): IndicadorSummary {
+  if (!serie.length) throw new Error('Serie vacía');
+  const last = serie[serie.length - 1];
+  const prev = serie.length > 1 ? serie[serie.length - 2] : last;
+  const desde12m = hace(365);
+  const serie12m = serie.filter(d => d.fecha >= desde12m);
+  const valores12m = serie12m.length ? serie12m.map(d => d.valor) : serie.map(d => d.valor);
+  return {
+    ultimo: last.valor,
+    fecha: last.fecha,
+    variacion: last.valor - prev.valor,
+    variacionPct: prev.valor !== 0 ? ((last.valor - prev.valor) / prev.valor) * 100 : 0,
+    min12m: Math.min(...valores12m),
+    max12m: Math.max(...valores12m),
+    serie,
+  };
+}
+
+// Combina historico local con datos frescos de la API
+async function mergeWithAPI<T extends {f: string; v: number}>(
+  historico: T[],
+  fetchFresh: () => Promise<DataPoint[]>
+): Promise<DataPoint[]> {
+  const localSerie: DataPoint[] = historico
+    .map(d => ({ fecha: d.f, valor: d.v }))
+    .sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+  try {
+    const fresh = await fetchFresh();
+    const lastLocal = localSerie[localSerie.length - 1]?.fecha ?? '';
+    const newPoints = fresh.filter(d => d.fecha > lastLocal);
+    return [...localSerie, ...newPoints];
+  } catch {
+    return localSerie;
+  }
+}
+
+async function fetchRPfresh(): Promise<DataPoint[]> {
+  const url = `${AR_DATOS_BASE}/finanzas/indices/riesgo-pais`;
+  const res = await fetch(url, { next: { revalidate: 3600 } });
+  if (!res.ok) return [];
+  const json: { fecha: string; valor: number }[] = await res.json();
+  return json
+    .map(d => ({ fecha: d.fecha.slice(0, 10), valor: d.valor }))
+    .sort((a, b) => a.fecha.localeCompare(b.fecha));
+}
+
+async function fetchBCRA(idVariable: number, dias = 30): Promise<DataPoint[]> {
   const desde = hace(dias);
   const hasta = toISO(new Date());
   const url = `${BCRA_BASE}/${idVariable}?desde=${desde}&hasta=${hasta}&limit=3000`;
   const res = await fetch(url, { next: { revalidate: 3600 } });
-  if (!res.ok) throw new Error(`BCRA API error ${res.status}`);
+  if (!res.ok) return [];
   const json = await res.json();
   const detalle: { fecha: string; valor: number }[] = json.results?.[0]?.detalle ?? [];
   return detalle
@@ -47,73 +97,46 @@ async function fetchBCRA(idVariable: number, dias = 365): Promise<DataPoint[]> {
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
 }
 
-async function fetchRiesgoPais(dias = 365): Promise<DataPoint[]> {
-  const url = `${AR_DATOS_BASE}/finanzas/indices/riesgo-pais`;
-  const res = await fetch(url, { next: { revalidate: 3600 } });
-  if (!res.ok) throw new Error(`ArgentinaDatos error ${res.status}`);
-  const json: { fecha: string; valor: number }[] = await res.json();
-  const cutoff = hace(dias);
-  return json
-    .filter(d => d.fecha >= cutoff)
-    .map(d => ({ fecha: d.fecha.slice(0, 10), valor: d.valor }))
-    .sort((a, b) => a.fecha.localeCompare(b.fecha));
-}
-
-function buildSummary(serie: DataPoint[]): IndicadorSummary {
-  if (!serie.length) throw new Error('Serie vacía');
-  const last = serie[serie.length - 1];
-  const prev = serie.length > 1 ? serie[serie.length - 2] : last;
-  const valores = serie.map(d => d.valor);
-  return {
-    ultimo: last.valor,
-    fecha: last.fecha,
-    variacion: last.valor - prev.valor,
-    variacionPct: prev.valor !== 0 ? ((last.valor - prev.valor) / prev.valor) * 100 : 0,
-    min12m: Math.min(...valores),
-    max12m: Math.max(...valores),
-    serie,
-  };
-}
-
-export async function getReservas(dias = 365) {
-  const serie = await fetchBCRA(1, dias);
+export async function getRiesgoPais() {
+  const serie = await mergeWithAPI(
+    rpHistorico as {f: string; v: number}[],
+    fetchRPfresh
+  );
   return buildSummary(serie);
 }
 
-export async function getRiesgoPais(dias = 365) {
-  const serie = await fetchRiesgoPais(dias);
+export async function getReservas() {
+  const serie = await mergeWithAPI(
+    resHistorico as {f: string; v: number}[],
+    () => fetchBCRA(1, 30)
+  );
   return buildSummary(serie);
 }
 
 export async function getCompras(): Promise<ComprasSummary> {
-  // idVariable 74: posición neta acumulada anual en USD MM
   const serie = await fetchBCRA(74, 400);
-  if (serie.length < 2) throw new Error('Serie compras vacía');
+  if (serie.length < 2) {
+    return { hoy: 0, fechaHoy: toISO(new Date()), acumMes: 0, acumAnio: 0, serie: [] };
+  }
 
   const hoy = new Date();
   const inicioMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
   const inicioAnio = `${hoy.getFullYear()}-01-01`;
 
-  // El último valor es el acumulado anual
   const last = serie[serie.length - 1];
   const prev = serie[serie.length - 2];
-
-  // Compra diaria = diferencia entre hoy y ayer
   const compraDiaria = Math.round((last.valor - prev.valor) * 100) / 100;
 
-  // Acumulado del mes = valor hoy - valor al inicio del mes
-  const puntoInicioMes = serie.filter(d => d.fecha >= inicioMes)[0];
+  const puntoInicioMes = serie.find(d => d.fecha >= inicioMes);
   const acumMes = puntoInicioMes
-    ? Math.round((last.valor - puntoInicioMes.valor + (puntoInicioMes ? compraDiaria : 0)) * 100) / 100
+    ? Math.round((last.valor - puntoInicioMes.valor) * 100) / 100
     : last.valor;
 
-  // Acumulado anual = valor hoy - valor al inicio del año (o directamente el acumulado si la serie empieza en enero)
-  const puntoInicioAnio = serie.filter(d => d.fecha >= inicioAnio)[0];
+  const puntoInicioAnio = serie.find(d => d.fecha >= inicioAnio);
   const acumAnio = puntoInicioAnio
     ? Math.round((last.valor - puntoInicioAnio.valor) * 100) / 100
     : last.valor;
 
-  // Serie diaria para el gráfico
   const serieDaily: DataPoint[] = [];
   for (let i = 1; i < serie.length; i++) {
     serieDaily.push({
@@ -122,11 +145,5 @@ export async function getCompras(): Promise<ComprasSummary> {
     });
   }
 
-  return {
-    hoy: compraDiaria,
-    fechaHoy: last.fecha,
-    acumMes,
-    acumAnio,
-    serie: serieDaily,
-  };
+  return { hoy: compraDiaria, fechaHoy: last.fecha, acumMes, acumAnio, serie: serieDaily };
 }
