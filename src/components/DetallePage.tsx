@@ -5,7 +5,7 @@ import {
   ResponsiveContainer, AreaChart, Area,
   XAxis, YAxis, Tooltip, ReferenceLine, CartesianGrid,
 } from 'recharts';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { IndicadorSummary } from '@/lib/data';
 import type { Hito } from '@/lib/hitos';
 import { TAG_LABELS } from '@/lib/hitos';
@@ -18,6 +18,9 @@ const RANGOS = [
   { label: '3M', dias: 90 },
   { label: '6M', dias: 180 },
   { label: '1A', dias: 365 },
+  { label: '3A', dias: 365 * 3 },
+  { label: '5A', dias: 365 * 5 },
+  { label: 'Todo', dias: 365 * 30 },
 ];
 
 const TAG_COLORS: Record<string, string> = {
@@ -27,7 +30,6 @@ const TAG_COLORS: Record<string, string> = {
   bcra: '#3fb950',
 };
 
-// Para riesgo pais: baja = bueno (verde), sube = malo (rojo)
 const INVERT_LOGIC: IndicadorTipo[] = ['riesgo-pais'];
 
 function formatValor(tipo: IndicadorTipo, v: number): string {
@@ -42,9 +44,10 @@ function formatFecha(iso: string) {
   return `${parseInt(d)} ${meses[parseInt(m) - 1]} ${y}`;
 }
 
-function shortDate(iso: string) {
-  const [, m, d] = iso.split('-');
+function shortDate(iso: string, totalDias: number) {
+  const [y, m, d] = iso.split('-');
   const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  if (totalDias > 365 * 2) return `${meses[parseInt(m) - 1]} ${y}`;
   return `${parseInt(d)} ${meses[parseInt(m) - 1]}`;
 }
 
@@ -61,19 +64,33 @@ interface Props {
 export default function DetallePage({
   titulo, subtitulo, data, hitos, accentColor, tipo, back,
 }: Props) {
-  const [rango, setRango] = useState(90);
+  const [rangoIdx, setRangoIdx] = useState(3); // default 1A
+  const [customDesde, setCustomDesde] = useState('');
+  const [customHasta, setCustomHasta] = useState('');
+  const [modoCustom, setModoCustom] = useState(false);
 
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - rango);
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
+  const { serie, hitosEnRango, totalDias } = useMemo(() => {
+    let desde: string;
+    let hasta: string;
+    let dias: number;
 
-  const serie = data.serie.filter(d => d.fecha >= cutoffStr);
-  const hitosEnRango = hitos.filter(h => h.fecha >= cutoffStr);
+    if (modoCustom && customDesde && customHasta) {
+      desde = customDesde;
+      hasta = customHasta;
+      const ms = new Date(hasta).getTime() - new Date(desde).getTime();
+      dias = Math.ceil(ms / 86400000);
+    } else {
+      dias = RANGOS[rangoIdx].dias;
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - dias);
+      desde = cutoff.toISOString().slice(0, 10);
+      hasta = new Date().toISOString().slice(0, 10);
+    }
 
-  const chartData = serie.map(d => ({
-    fecha: d.fecha,
-    valor: d.valor,
-  }));
+    const serie = data.serie.filter(d => d.fecha >= desde && d.fecha <= hasta);
+    const hitosEnRango = hitos.filter(h => h.fecha >= desde && h.fecha <= hasta);
+    return { serie, hitosEnRango, totalDias: dias };
+  }, [rangoIdx, modoCustom, customDesde, customHasta, data.serie, hitos]);
 
   const sube = data.variacion >= 0;
   const invertLogic = INVERT_LOGIC.includes(tipo);
@@ -103,20 +120,49 @@ export default function DetallePage({
       </header>
 
       <div className={styles.rangeRow}>
-        {RANGOS.map(r => (
+        {RANGOS.map((r, i) => (
           <button
-            key={r.dias}
-            className={`${styles.rangeBtn} ${rango === r.dias ? styles.active : ''}`}
-            onClick={() => setRango(r.dias)}
+            key={r.label}
+            className={`${styles.rangeBtn} ${!modoCustom && rangoIdx === i ? styles.active : ''}`}
+            onClick={() => { setRangoIdx(i); setModoCustom(false); }}
           >
             {r.label}
           </button>
         ))}
+        <button
+          className={`${styles.rangeBtn} ${modoCustom ? styles.active : ''}`}
+          onClick={() => setModoCustom(true)}
+        >
+          Custom
+        </button>
       </div>
 
+      {modoCustom && (
+        <div className={styles.customRow}>
+          <span className={styles.customLabel}>Desde</span>
+          <input
+            type="date"
+            className={styles.dateInput}
+            value={customDesde}
+            min="2000-01-01"
+            max={customHasta || new Date().toISOString().slice(0,10)}
+            onChange={e => setCustomDesde(e.target.value)}
+          />
+          <span className={styles.customLabel}>Hasta</span>
+          <input
+            type="date"
+            className={styles.dateInput}
+            value={customHasta}
+            min={customDesde || '2000-01-01'}
+            max={new Date().toISOString().slice(0,10)}
+            onChange={e => setCustomHasta(e.target.value)}
+          />
+        </div>
+      )}
+
       <div className={styles.chartWrap}>
-        <ResponsiveContainer width="100%" height={280}>
-          <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+        <ResponsiveContainer width="100%" height={320}>
+          <AreaChart data={serie} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor={accentColor} stopOpacity={0.15} />
@@ -129,7 +175,7 @@ export default function DetallePage({
               tick={{ fontSize: 10, fill: '#484f58', fontFamily: 'IBM Plex Mono' }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={shortDate}
+              tickFormatter={(v) => shortDate(v, totalDias)}
               interval="preserveStartEnd"
             />
             <YAxis
