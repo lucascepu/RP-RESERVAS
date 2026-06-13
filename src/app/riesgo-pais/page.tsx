@@ -5,7 +5,7 @@ import DetallePage from '@/components/DetallePage';
 export const revalidate = 3600;
 
 export default async function RiesgoPaisPage() {
-  const data = await getRiesgoPais(365);
+  const data = await getRiesgoPais();
   const hitos = HITOS.filter(h => h.indicador === 'riesgo-pais' || h.indicador === 'global');
 
   return (
