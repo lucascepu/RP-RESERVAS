@@ -1,15 +1,16 @@
 .main {
-  max-width: 860px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 2rem 1.25rem 4rem;
+  padding: 2rem 1.5rem 4rem;
 }
 
 .breadcrumb { margin-bottom: 1.5rem; }
 
 .back {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
   transition: color 0.12s;
+  font-family: 'DM Mono', monospace;
 }
 .back:hover { color: var(--text-primary); }
 
@@ -17,43 +18,47 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.25rem;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border);
 }
 
 .titulo {
-  font-size: 22px;
-  font-weight: 500;
+  font-size: 24px;
+  font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 5px;
+  letter-spacing: -0.02em;
 }
 
 .subtitulo {
   font-size: 12px;
   color: var(--text-tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
+  font-family: 'DM Mono', monospace;
 }
 
 .kpiBox { text-align: right; }
 
 .kpiValue {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 26px;
+  font-family: 'DM Mono', monospace;
+  font-size: 30px;
   font-weight: 500;
   line-height: 1.1;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
-.kpiDelta { font-size: 12px; margin-bottom: 2px; }
-.up { color: var(--green); }
-.down { color: var(--red); }
+.kpiDelta {
+  font-size: 13px;
+  margin-bottom: 3px;
+  font-family: 'DM Mono', monospace;
+}
 
 .kpiFecha {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-tertiary);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'DM Mono', monospace;
 }
 
 .rangeRow {
@@ -64,9 +69,9 @@
 }
 
 .rangeBtn {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  padding: 4px 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  padding: 5px 12px;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: transparent;
@@ -98,18 +103,18 @@
   font-size: 11px;
   color: var(--text-tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+  font-family: 'DM Mono', monospace;
 }
 
 .dateInput {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'DM Mono', monospace;
   font-size: 12px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text-primary);
-  padding: 4px 8px;
+  padding: 5px 10px;
   outline: none;
   cursor: pointer;
 }
@@ -122,21 +127,22 @@
 
 .hitosSection {
   border-top: 1px solid var(--border);
-  padding-top: 1.25rem;
+  padding-top: 1.5rem;
 }
 
 .hitosTitle {
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
   color: var(--text-tertiary);
   margin-bottom: 1rem;
+  font-family: 'DM Mono', monospace;
 }
 
 .hitoItem {
   display: flex;
   gap: 12px;
-  padding: 0.75rem 0;
+  padding: 0.875rem 0;
   border-bottom: 1px solid var(--border);
 }
 
@@ -150,19 +156,19 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 }
 
 .hitoTag {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'DM Mono', monospace;
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .hitoFecha {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
   color: var(--text-tertiary);
 }
 
@@ -173,18 +179,18 @@
   border: 1px solid var(--border);
   border-radius: 3px;
   padding: 1px 5px;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'DM Mono', monospace;
 }
 
 .hitoTitulo {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-primary);
   line-height: 1.4;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 
 .hitoDesc {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.5;
 }
