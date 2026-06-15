@@ -1,0 +1,33 @@
+name: Actualizar datos diarios
+
+on:
+  schedule:
+    # 20:30 UTC = 17:30 Argentina (UTC-3), lunes a viernes
+    - cron: '30 20 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Actualizar JSONs
+        run: python scripts/update_data.py
+
+      - name: Commit si hay cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/data/riesgo-pais.json src/data/reservas.json
+          git diff --staged --quiet || git commit -m "data: actualizacion automatica $(TZ='America/Argentina/Buenos_Aires' date +'%d/%m/%Y %H:%M')"
+          git push
