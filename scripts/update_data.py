@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import urllib.request
 import json
-import os
 from datetime import datetime, timezone, timedelta
 
 AR_TZ = timezone(timedelta(hours=-3))
@@ -24,10 +23,8 @@ def update_rp():
     path = 'src/data/riesgo-pais.json'
     data = load_json(path)
     last_fecha = data[-1]['f']
-
     try:
         fresh = fetch('https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais')
-        # API devuelve lista de {fecha, valor}
         nuevos = [
             {"f": d['fecha'][:10], "v": int(d['valor'])}
             for d in fresh
@@ -37,9 +34,9 @@ def update_rp():
             nuevos.sort(key=lambda x: x['f'])
             data.extend(nuevos)
             save_json(path, data)
-            print(f"RP: agregados {len(nuevos)} puntos — último: {data[-1]}")
+            print(f"RP: +{len(nuevos)} puntos — ultimo: {data[-1]}")
         else:
-            print(f"RP: sin datos nuevos (último: {last_fecha})")
+            print(f"RP: sin datos nuevos (ultimo: {last_fecha})")
     except Exception as e:
         print(f"RP error: {e}")
 
@@ -47,11 +44,8 @@ def update_reservas():
     path = 'src/data/reservas.json'
     data = load_json(path)
     last_fecha = data[-1]['f']
-
     try:
-        desde = last_fecha
-        hasta = hoy
-        url = f'https://api.bcra.gob.ar/estadisticas/v4.0/monetarias/1?desde={desde}&hasta={hasta}&limit=100'
+        url = f'https://api.bcra.gob.ar/estadisticas/v4.0/monetarias/1?desde={last_fecha}&hasta={hoy}&limit=100'
         resp = fetch(url)
         detalle = resp.get('results', [{}])[0].get('detalle', [])
         nuevos = [
@@ -63,14 +57,14 @@ def update_reservas():
             nuevos.sort(key=lambda x: x['f'])
             data.extend(nuevos)
             save_json(path, data)
-            print(f"Reservas: agregados {len(nuevos)} puntos — último: {data[-1]}")
+            print(f"Reservas: +{len(nuevos)} puntos — ultimo: {data[-1]}")
         else:
-            print(f"Reservas: sin datos nuevos (último: {last_fecha})")
+            print(f"Reservas: sin datos nuevos (ultimo: {last_fecha})")
     except Exception as e:
         print(f"Reservas error: {e}")
 
 if __name__ == '__main__':
-    print(f"Actualizando datos — {hoy} (AR)")
+    print(f"Actualizando — {hoy} AR")
     update_rp()
     update_reservas()
     print("Listo.")
