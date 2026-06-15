@@ -71,7 +71,9 @@ export default async function Home() {
           <KpiCard
             label="Compras BCRA"
             value={compData.hoy > 0 ? `+${compData.hoy.toLocaleString('es-AR')}` : compData.hoy.toLocaleString('es-AR')}
-            unit="USD MM hoy"
+            unit={compData.fechaHoy === new Date().toISOString().slice(0, 10)
+              ? 'USD MM hoy'
+              : `USD MM (${compData.fechaHoy.slice(8, 10)}/${compData.fechaHoy.slice(5, 7)})`}
             href="/compras"
             accentColor="var(--green)"
             hideVariacion={true}
