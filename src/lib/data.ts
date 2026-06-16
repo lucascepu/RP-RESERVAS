@@ -18,6 +18,7 @@ export interface IndicadorSummary {
   max12m: number;
   ytd: number;
   mtd: number;
+  badge?: string;
   serie: DataPoint[];
 }
 
@@ -57,6 +58,19 @@ function buildSummary(serie: DataPoint[]): IndicadorSummary {
   const ytd = puntoInicioAnio ? last.valor - puntoInicioAnio.valor : 0;
   const mtd = puntoInicioMes ? last.valor - puntoInicioMes.valor : 0;
 
+  // Badge: mínimo de N años
+  const añosMinimo = [1, 2, 3, 5, 8, 10];
+  let badge: string | undefined;
+  for (const años of añosMinimo) {
+    const desde = new Date();
+    desde.setFullYear(desde.getFullYear() - años);
+    const desdeISO = desde.toISOString().slice(0, 10);
+    const serieN = serie.filter(d => d.fecha >= desdeISO);
+    if (serieN.length && last.valor <= Math.min(...serieN.map(d => d.valor))) {
+      badge = `Mínimo ${años} año${años > 1 ? 's' : ''}`;
+    }
+  }
+
   return {
     ultimo: last.valor,
     fecha: last.fecha,
@@ -66,6 +80,7 @@ function buildSummary(serie: DataPoint[]): IndicadorSummary {
     max12m: Math.max(...valores12m),
     ytd: Math.round(ytd * 10) / 10,
     mtd: Math.round(mtd * 10) / 10,
+    badge,
     serie,
   };
 }
