@@ -51,6 +51,7 @@ export default async function Home() {
             accentColor="#a78bfa"
             invertLogic={true}
             subInfo={`YTD: ${fmtDelta(rpData.ytd, 'pbs')} · MTD: ${fmtDelta(rpData.mtd, 'pbs')}`}
+            badge={rpData.badge}
           />
         ) : <CardError label="Riesgo País" />}
 
