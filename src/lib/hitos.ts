@@ -14,6 +14,15 @@ export interface Hito {
 
 export const HITOS: Hito[] = [
   {
+    id: 'rp-minimo-8-anos',
+    fecha: '2026-06-15',
+    titulo: 'Riesgo País toca mínimo desde abril 2018',
+    descripcion: 'El EMBI Argentina cierra en 425 pbs, mínimo en 8 años. Impulsado por el upgrade de S&P a B− del 9/6 y el contexto global favorable (acuerdo EEUU-Irán). Última vez en este nivel: 27 de abril de 2018.',
+    tag: 'deuda',
+    indicador: 'riesgo-pais',
+    fuente: 'JP Morgan / Ámbito',
+  },
+  {
     id: 'sp-upgrade-b-minus',
     fecha: '2026-06-09',
     titulo: 'S&P sube calificación de deuda argentina a B−',
