@@ -1,33 +1,51 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+/* ─────────────────────────────────────────────────────────────────────────── *
+ * DESIGN TOKENS — Sistema unificado SIOPEL + RP-Reservas                     *
+ * ─────────────────────────────────────────────────────────────────────────── */
 :root {
-  --bg: #0d1117;
-  --bg-card: #13181f;
-  --bg-hover: #1a2030;
-  --border: rgba(255,255,255,0.10);
-  --border-hover: rgba(255,255,255,0.22);
-  --text-primary: #f0f6fc;
+  /* ── Fondos ── */
+  --bg:       #0d1117;
+  --bg-card:  #161b23;
+  --bg-hover: #1c2333;
+
+  /* ── Bordes ── */
+  --border:       rgba(255,255,255,.10);
+  --border-hover: rgba(255,255,255,.22);
+
+  /* ── Texto ── */
+  --text-primary:   #f0f6fc;
   --text-secondary: #adbac7;
-  --text-tertiary: #6e7f8d;
-  --accent: #58a6ff;
-  --green: #3fb950;
-  --red: #f85149;
-  --amber: #d29922;
+  --text-tertiary:  #6e7f8d;
+
+  /* ── Colores de datos ── */
+  --blue:   #78AEDE;
+  --amber:  #F5C36B;
+  --green:  #3fb950;
+  --red:    #f85149;
+  --purple: #AFA9EC;
+  --teal:   #5DCAA5;
+  --coral:  #F0997B;
+  --gray:   #B4B2A9;
+  --fill-blue: rgba(120,174,222,.13);
+
+  /* ── Alias backward-compat ── */
+  --accent: var(--blue);  /* usado en page.tsx como prop accentColor */
+
+  /* ── Tipografía ── */
   --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: var(--bg);
-  color: var(--text-primary);
+  background:  var(--bg);
+  color:       var(--text-primary);
   font-family: var(--font);
-  font-size: 15px;
+  font-size:   15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "tnum" 1;
 }
 
 a { color: inherit; text-decoration: none; }
-
-.mono { font-family: var(--font); font-variant-numeric: tabular-nums; }
