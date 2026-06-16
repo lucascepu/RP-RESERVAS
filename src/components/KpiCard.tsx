@@ -13,12 +13,13 @@ interface Props {
   subInfo?: string;
   subInfo2?: string;
   hideVariacion?: boolean;
+  badge?: string;
 }
 
 export default function KpiCard({
   label, value, unit, variacion = 0, variacionPct = 0,
   href, accentColor, invertLogic = false,
-  subInfo, subInfo2, hideVariacion = false,
+  subInfo, subInfo2, hideVariacion = false, badge,
 }: Props) {
   const sube = variacion >= 0;
   const esBueno = invertLogic ? !sube : sube;
@@ -31,7 +32,10 @@ export default function KpiCard({
   return (
     <Link href={href} className={styles.card}>
       <div className={styles.accent} style={{ background: accentColor }} />
-      <div className={styles.label}>{label}</div>
+      <div className={styles.labelRow}>
+        <div className={styles.label}>{label}</div>
+        {badge && <div className={styles.badge}>{badge}</div>}
+      </div>
 
       <div className={styles.valueRow}>
         <span className={styles.value}>{value}</span>
