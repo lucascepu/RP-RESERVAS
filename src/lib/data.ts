@@ -2,7 +2,6 @@ import rpHistorico from '@/data/riesgo-pais.json';
 import resHistorico from '@/data/reservas.json';
 import comprasHistorico from '@/data/compras.json';
 
-const BCRA_BASE = 'https://api.bcra.gob.ar/estadisticas/v4.0/monetarias';
 const AR_DATOS_BASE = 'https://api.argentinadatos.com/v1';
 
 export interface DataPoint {
@@ -113,19 +112,6 @@ async function fetchRPfresh(): Promise<DataPoint[]> {
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
 }
 
-async function fetchBCRA(idVariable: number, dias = 30): Promise<DataPoint[]> {
-  const desde = hace(dias);
-  const hasta = toISO(new Date());
-  const url = `${BCRA_BASE}/${idVariable}?desde=${desde}&hasta=${hasta}&limit=3000`;
-  const res = await fetch(url, { next: { revalidate: 3600 } });
-  if (!res.ok) return [];
-  const json = await res.json();
-  const detalle: { fecha: string; valor: number }[] = json.results?.[0]?.detalle ?? [];
-  return detalle
-    .map(d => ({ fecha: d.fecha.slice(0, 10), valor: d.valor }))
-    .sort((a, b) => a.fecha.localeCompare(b.fecha));
-}
-
 export async function getRiesgoPais() {
   const serie = await mergeWithAPI(
     rpHistorico as {f: string; v: number}[],
@@ -135,15 +121,15 @@ export async function getRiesgoPais() {
 }
 
 export async function getReservas() {
-  const serie = await mergeWithAPI(
-    resHistorico as {f: string; v: number}[],
-    () => fetchBCRA(1, 30)
-  );
+  // Reservas: histórico local + carga manual diaria (BCRA no publica API confiable del dato del día)
+  const serie: DataPoint[] = (resHistorico as {f: string; v: number}[])
+    .map(d => ({ fecha: d.f, valor: d.v }))
+    .sort((a, b) => a.fecha.localeCompare(b.fecha));
   return buildSummary(serie);
 }
 
 export async function getCompras(): Promise<ComprasSummary> {
-  // Datos de carga manual (BCRA Twitter/X) — la API oficial v4 no publica compras diarias confiables
+  // Compras/ventas de divisas: 100% carga manual (BCRA Twitter/X @BancoCentral_AR, 17hs)
   const serie: DataPoint[] = (comprasHistorico as {f: string; v: number}[])
     .map(d => ({ fecha: d.f, valor: d.v }))
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
