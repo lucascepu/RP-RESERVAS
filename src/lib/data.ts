@@ -150,14 +150,12 @@ export async function getCompras(): Promise<ComprasSummary> {
 
   const ajusteFecha = comprasAjuste.acumuladoAlCierre.fecha;
   const ajusteValor = comprasAjuste.acumuladoAlCierre.valor;
-  const ajusteMesFecha = comprasAjuste.acumuladoMesAlCierre.fecha;
-  const ajusteMesValor = comprasAjuste.acumuladoMesAlCierre.valor;
 
-  // Acumulado mes: ajuste mensual (saldo real del mes a la fecha de corte) + cargas posteriores
-  const serieMesPostAjuste = serie.filter(d => d.fecha > ajusteMesFecha && d.fecha >= inicioMes);
-  const acumMes = ajusteMesValor + serieMesPostAjuste.reduce((sum, d) => sum + d.valor, 0);
+  // Acumulado mes: suma directa de la serie real (ya tenemos el detalle diario completo)
+  const serieMes = serie.filter(d => d.fecha >= inicioMes);
+  const acumMes = serieMes.reduce((sum, d) => sum + d.valor, 0);
 
-  // Acumulado año: ajuste anual (acumulado real a la fecha de corte) + cargas posteriores
+  // Acumulado año: ajuste (acumulado real previo a la serie cargada) + suma de la serie real
   const serieAnioPostAjuste = serie.filter(d => d.fecha > ajusteFecha);
   const acumAnio = ajusteValor + serieAnioPostAjuste.reduce((sum, d) => sum + d.valor, 0);
 
