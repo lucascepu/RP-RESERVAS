@@ -1,6 +1,7 @@
 import rpHistorico from '@/data/riesgo-pais.json';
 import resHistorico from '@/data/reservas.json';
 import comprasHistorico from '@/data/compras.json';
+import comprasAjuste from '@/data/compras-ajuste.json';
 
 const AR_DATOS_BASE = 'https://api.argentinadatos.com/v1';
 
@@ -130,6 +131,8 @@ export async function getReservas() {
 
 export async function getCompras(): Promise<ComprasSummary> {
   // Compras/ventas de divisas: 100% carga manual (BCRA Twitter/X @BancoCentral_AR, 17hs)
+  // compras-ajuste.json fija el acumulado real conocido a una fecha de corte,
+  // para que YTD/MTD sean correctos aunque la carga diaria recién empezó.
   const serie: DataPoint[] = (comprasHistorico as {f: string; v: number}[])
     .map(d => ({ fecha: d.f, valor: d.v }))
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
@@ -145,11 +148,20 @@ export async function getCompras(): Promise<ComprasSummary> {
   const last = serie[serie.length - 1];
   const compraDiaria = last.valor;
 
-  const serieMes = serie.filter(d => d.fecha >= inicioMes);
-  const acumMes = serieMes.reduce((sum, d) => sum + d.valor, 0);
+  const ajusteFecha = comprasAjuste.acumuladoAlCierre.fecha;
+  const ajusteValor = comprasAjuste.acumuladoAlCierre.valor;
 
-  const serieAnio = serie.filter(d => d.fecha >= inicioAnio);
-  const acumAnio = serieAnio.reduce((sum, d) => sum + d.valor, 0);
+  // Acumulado mes: suma de cargas diarias del mes + ajuste si el corte cae en este mes y aun no hay cargas previas a el dentro del mes
+  const serieMes = serie.filter(d => d.fecha >= inicioMes && d.fecha > ajusteFecha);
+  let acumMes = serieMes.reduce((sum, d) => sum + d.valor, 0);
+  if (ajusteFecha >= inicioMes) {
+    // El corte cayó este mes: no sabemos el detalle previo, así que el MTD solo refleja desde el corte
+    acumMes = serieMes.reduce((sum, d) => sum + d.valor, 0);
+  }
+
+  // Acumulado año: ajuste (acumulado real a la fecha de corte) + cargas diarias posteriores al corte
+  const serieAnioPostAjuste = serie.filter(d => d.fecha > ajusteFecha);
+  const acumAnio = ajusteValor + serieAnioPostAjuste.reduce((sum, d) => sum + d.valor, 0);
 
   return {
     hoy: compraDiaria,
