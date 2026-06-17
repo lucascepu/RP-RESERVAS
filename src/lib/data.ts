@@ -150,16 +150,14 @@ export async function getCompras(): Promise<ComprasSummary> {
 
   const ajusteFecha = comprasAjuste.acumuladoAlCierre.fecha;
   const ajusteValor = comprasAjuste.acumuladoAlCierre.valor;
+  const ajusteMesFecha = comprasAjuste.acumuladoMesAlCierre.fecha;
+  const ajusteMesValor = comprasAjuste.acumuladoMesAlCierre.valor;
 
-  // Acumulado mes: suma de cargas diarias del mes + ajuste si el corte cae en este mes y aun no hay cargas previas a el dentro del mes
-  const serieMes = serie.filter(d => d.fecha >= inicioMes && d.fecha > ajusteFecha);
-  let acumMes = serieMes.reduce((sum, d) => sum + d.valor, 0);
-  if (ajusteFecha >= inicioMes) {
-    // El corte cayó este mes: no sabemos el detalle previo, así que el MTD solo refleja desde el corte
-    acumMes = serieMes.reduce((sum, d) => sum + d.valor, 0);
-  }
+  // Acumulado mes: ajuste mensual (saldo real del mes a la fecha de corte) + cargas posteriores
+  const serieMesPostAjuste = serie.filter(d => d.fecha > ajusteMesFecha && d.fecha >= inicioMes);
+  const acumMes = ajusteMesValor + serieMesPostAjuste.reduce((sum, d) => sum + d.valor, 0);
 
-  // Acumulado año: ajuste (acumulado real a la fecha de corte) + cargas diarias posteriores al corte
+  // Acumulado año: ajuste anual (acumulado real a la fecha de corte) + cargas posteriores
   const serieAnioPostAjuste = serie.filter(d => d.fecha > ajusteFecha);
   const acumAnio = ajusteValor + serieAnioPostAjuste.reduce((sum, d) => sum + d.valor, 0);
 
