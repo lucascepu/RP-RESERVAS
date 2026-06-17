@@ -1,5 +1,6 @@
 import rpHistorico from '@/data/riesgo-pais.json';
 import resHistorico from '@/data/reservas.json';
+import comprasHistorico from '@/data/compras.json';
 
 const BCRA_BASE = 'https://api.bcra.gob.ar/estadisticas/v4.0/monetarias';
 const AR_DATOS_BASE = 'https://api.argentinadatos.com/v1';
@@ -142,8 +143,12 @@ export async function getReservas() {
 }
 
 export async function getCompras(): Promise<ComprasSummary> {
-  const serie = await fetchBCRA(74, 400);
-  if (serie.length < 2) {
+  // Datos de carga manual (BCRA Twitter/X) — la API oficial v4 no publica compras diarias confiables
+  const serie: DataPoint[] = (comprasHistorico as {f: string; v: number}[])
+    .map(d => ({ fecha: d.f, valor: d.v }))
+    .sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+  if (serie.length < 1) {
     return { hoy: 0, fechaHoy: toISO(new Date()), acumMes: 0, acumAnio: 0, serie: [] };
   }
 
@@ -152,22 +157,19 @@ export async function getCompras(): Promise<ComprasSummary> {
   const inicioAnio = `${hoy.getFullYear()}-01-01`;
 
   const last = serie[serie.length - 1];
-  const prev = serie[serie.length - 2];
-  const compraDiaria = Math.round((last.valor - prev.valor) * 100) / 100;
+  const compraDiaria = last.valor;
 
-  const puntoInicioMes = serie.find(d => d.fecha >= inicioMes);
-  const acumMes = puntoInicioMes ? Math.round((last.valor - puntoInicioMes.valor) * 100) / 100 : last.valor;
+  const serieMes = serie.filter(d => d.fecha >= inicioMes);
+  const acumMes = serieMes.reduce((sum, d) => sum + d.valor, 0);
 
-  const puntoInicioAnio = serie.find(d => d.fecha >= inicioAnio);
-  const acumAnio = puntoInicioAnio ? Math.round((last.valor - puntoInicioAnio.valor) * 100) / 100 : last.valor;
+  const serieAnio = serie.filter(d => d.fecha >= inicioAnio);
+  const acumAnio = serieAnio.reduce((sum, d) => sum + d.valor, 0);
 
-  const serieDaily: DataPoint[] = [];
-  for (let i = 1; i < serie.length; i++) {
-    serieDaily.push({
-      fecha: serie[i].fecha,
-      valor: Math.round((serie[i].valor - serie[i - 1].valor) * 100) / 100,
-    });
-  }
-
-  return { hoy: compraDiaria, fechaHoy: last.fecha, acumMes, acumAnio, serie: serieDaily };
+  return {
+    hoy: compraDiaria,
+    fechaHoy: last.fecha,
+    acumMes: Math.round(acumMes * 10) / 10,
+    acumAnio: Math.round(acumAnio * 10) / 10,
+    serie,
+  };
 }
