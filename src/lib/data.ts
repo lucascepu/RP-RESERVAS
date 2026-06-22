@@ -2,6 +2,7 @@ import rpHistorico from '@/data/riesgo-pais.json';
 import resHistorico from '@/data/reservas.json';
 import comprasHistorico from '@/data/compras.json';
 import comprasAjuste from '@/data/compras-ajuste.json';
+import mulcHistorico from '@/data/mulc.json';
 
 const AR_DATOS_BASE = 'https://api.argentinadatos.com/v1';
 
@@ -28,7 +29,12 @@ export interface ComprasSummary {
   fechaHoy: string;
   acumMes: number;
   acumAnio: number;
-  serie: DataPoint[];
+  pctMulcHoy: number;
+  volMulcHoy: number;
+  acum5ruedas: number;
+  pctPromedio5ruedas: number;
+  serieCompras: DataPoint[];
+  seriePct: DataPoint[];
 }
 
 function toISO(date: Date) {
@@ -59,7 +65,6 @@ function buildSummary(serie: DataPoint[]): IndicadorSummary {
   const ytd = puntoInicioAnio ? last.valor - puntoInicioAnio.valor : 0;
   const mtd = puntoInicioMes ? last.valor - puntoInicioMes.valor : 0;
 
-  // Badge: mínimo de N años
   const añosMinimo = [1, 2, 3, 5, 8, 10];
   let badge: string | undefined;
   for (const años of añosMinimo) {
@@ -122,7 +127,6 @@ export async function getRiesgoPais() {
 }
 
 export async function getReservas() {
-  // Reservas: histórico local + carga manual diaria (BCRA no publica API confiable del dato del día)
   const serie: DataPoint[] = (resHistorico as {f: string; v: number}[])
     .map(d => ({ fecha: d.f, valor: d.v }))
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
@@ -130,40 +134,70 @@ export async function getReservas() {
 }
 
 export async function getCompras(): Promise<ComprasSummary> {
-  // Compras/ventas de divisas: 100% carga manual (BCRA Twitter/X @BancoCentral_AR, 17hs)
-  // compras-ajuste.json fija el acumulado real conocido a una fecha de corte,
-  // para que YTD/MTD sean correctos aunque la carga diaria recién empezó.
   const serie: DataPoint[] = (comprasHistorico as {f: string; v: number}[])
     .map(d => ({ fecha: d.f, valor: d.v }))
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
 
+  const mulcSerie = (mulcHistorico as {f: string; v: number; tc: number}[])
+    .sort((a, b) => a.f.localeCompare(b.f));
+
   if (serie.length < 1) {
-    return { hoy: 0, fechaHoy: toISO(new Date()), acumMes: 0, acumAnio: 0, serie: [] };
+    return {
+      hoy: 0, fechaHoy: toISO(new Date()),
+      acumMes: 0, acumAnio: 0,
+      pctMulcHoy: 0, volMulcHoy: 0,
+      acum5ruedas: 0, pctPromedio5ruedas: 0,
+      serieCompras: [], seriePct: [],
+    };
   }
 
   const hoy = new Date();
   const inicioMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
-  const inicioAnio = `${hoy.getFullYear()}-01-01`;
 
   const last = serie[serie.length - 1];
   const compraDiaria = last.valor;
 
-  const ajusteFecha = comprasAjuste.acumuladoAlCierre.fecha;
-  const ajusteValor = comprasAjuste.acumuladoAlCierre.valor;
-
-  // Acumulado mes: suma directa de la serie real (ya tenemos el detalle diario completo)
+  // Acumulado mes (datos reales diarios)
   const serieMes = serie.filter(d => d.fecha >= inicioMes);
   const acumMes = serieMes.reduce((sum, d) => sum + d.valor, 0);
 
-  // Acumulado año: ajuste (acumulado real previo a la serie cargada) + suma de la serie real
-  const serieAnioPostAjuste = serie.filter(d => d.fecha > ajusteFecha);
-  const acumAnio = ajusteValor + serieAnioPostAjuste.reduce((sum, d) => sum + d.valor, 0);
+  // Acumulado año = ajuste pre-carga + suma real
+  const ajusteFecha = comprasAjuste.acumuladoAlCierre.fecha;
+  const ajusteValor = comprasAjuste.acumuladoAlCierre.valor;
+  const seriePostAjuste = serie.filter(d => d.fecha > ajusteFecha);
+  const acumAnio = ajusteValor + seriePostAjuste.reduce((sum, d) => sum + d.valor, 0);
+
+  // % BCRA/MULC del día
+  const mulcDict = Object.fromEntries(mulcSerie.map(d => [d.f, d.v]));
+  const volMulcHoy = mulcDict[last.fecha] ?? 0;
+  const pctMulcHoy = volMulcHoy > 0 ? Math.round(compraDiaria / volMulcHoy * 1000) / 10 : 0;
+
+  // Últimas 5 ruedas
+  const ultimas5 = serie.slice(-5);
+  const acum5ruedas = ultimas5.reduce((sum, d) => sum + d.valor, 0);
+  const pctPromedio5ruedas = ultimas5.reduce((sum, d) => {
+    const mulcVol = mulcDict[d.fecha] ?? 0;
+    return sum + (mulcVol > 0 ? d.valor / mulcVol * 100 : 0);
+  }, 0) / ultimas5.length;
+
+  // Serie % diario para el gráfico
+  const seriePct: DataPoint[] = serie
+    .filter(d => mulcDict[d.fecha])
+    .map(d => ({
+      fecha: d.fecha,
+      valor: Math.round(d.valor / mulcDict[d.fecha] * 1000) / 10,
+    }));
 
   return {
     hoy: compraDiaria,
     fechaHoy: last.fecha,
     acumMes: Math.round(acumMes * 10) / 10,
     acumAnio: Math.round(acumAnio * 10) / 10,
-    serie,
+    pctMulcHoy,
+    volMulcHoy,
+    acum5ruedas: Math.round(acum5ruedas * 10) / 10,
+    pctPromedio5ruedas: Math.round(pctPromedio5ruedas * 10) / 10,
+    serieCompras: serie,
+    seriePct,
   };
 }
