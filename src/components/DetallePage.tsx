@@ -58,7 +58,7 @@ function shortDate(iso: string, totalDias: number) {
   const [y, m, d] = iso.split('-');
   const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
   if (totalDias > 365 * 2) return `${meses[parseInt(m) - 1]} ${y}`;
-  if (totalDias > 90) return `${meses[parseInt(m) - 1]} ${y.slice(2)}`;
+  if (totalDias > 365) return `${meses[parseInt(m) - 1]} '${y.slice(2)}`;
   return `${parseInt(d)} ${meses[parseInt(m) - 1]}`;
 }
 
@@ -155,13 +155,13 @@ export default function DetallePage({
         <div className={styles.mulcPanel}>
           <div className={styles.mulcKpis}>
             <div className={styles.mulcKpi}>
-              <div className={styles.mulcKpiLabel}>% MULC hoy</div>
+              <div className={styles.mulcKpiLabel}>% MULC últ. rueda</div>
               <div className={styles.mulcKpiValue} style={{ color: 'var(--green)' }}>
                 {mulcData.pctHoy}%
               </div>
             </div>
             <div className={styles.mulcKpi}>
-              <div className={styles.mulcKpiLabel}>Vol. MULC hoy</div>
+              <div className={styles.mulcKpiLabel}>Vol. MULC últ. rueda</div>
               <div className={styles.mulcKpiValue}>{mulcData.volHoy.toLocaleString('es-AR')} MM</div>
             </div>
             <div className={styles.mulcKpi}>
