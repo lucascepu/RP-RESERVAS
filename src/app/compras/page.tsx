@@ -9,7 +9,7 @@ export default async function ComprasPage() {
   const data = await getCompras();
   const hitos = HITOS.filter(h => h.indicador === 'compras' || h.indicador === 'global');
 
-  const valores = data.serie.map(d => d.valor);
+  const valores = data.serieCompras.map(d => d.valor);
   const summary: IndicadorSummary = {
     ultimo: data.hoy,
     fecha: data.fechaHoy,
@@ -19,18 +19,26 @@ export default async function ComprasPage() {
     max12m: valores.length ? Math.max(...valores) : 0,
     ytd: data.acumAnio,
     mtd: data.acumMes,
-    serie: data.serie,
+    serie: data.serieCompras,
   };
 
   return (
     <DetallePage
-      titulo="Compras de Divisas"
-      subtitulo="BCRA · compra neta diaria · millones de USD"
+      titulo="Compras de Divisas BCRA"
+      subtitulo="Intervención BCRA en el MULC · millones de USD"
       data={summary}
       hitos={hitos}
       accentColor="var(--green)"
       tipo="compras"
       back="/"
+      mulcData={{
+        pctHoy: data.pctMulcHoy,
+        volHoy: data.volMulcHoy,
+        acum5ruedas: data.acum5ruedas,
+        pctPromedio5: data.pctPromedio5ruedas,
+        acumAnio: data.acumAnio,
+        seriePct: data.seriePct,
+      }}
     />
   );
 }
