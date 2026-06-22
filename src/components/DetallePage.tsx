@@ -133,10 +133,20 @@ export default function DetallePage({
           <div className={styles.kpiValue} style={{ color: accentColor }}>
             {formatValor(tipo, data.ultimo)}
           </div>
-          <div className={styles.kpiDelta} style={{ color: deltaColor }}>
-            {sube ? '▲' : '▼'} {Math.abs(data.variacionPct).toFixed(1)}% vs rueda anterior
+          {tipo !== 'compras' && (
+            <div className={styles.kpiDelta} style={{ color: deltaColor }}>
+              {sube ? '▲' : '▼'} {Math.abs(data.variacionPct).toFixed(1)}% vs rueda anterior
+            </div>
+          )}
+          <div className={styles.kpiFecha}>
+            {(() => {
+              const hoy = new Date().toISOString().slice(0, 10);
+              const esHoy = data.fecha === hoy;
+              return esHoy
+                ? `al ${formatFecha(data.fecha)}`
+                : `último dato: ${formatFecha(data.fecha)}`;
+            })()}
           </div>
-          <div className={styles.kpiFecha}>al {formatFecha(data.fecha)}</div>
         </div>
       </header>
 
