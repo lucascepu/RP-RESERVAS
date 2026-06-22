@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import {
   ResponsiveContainer, AreaChart, Area,
-  XAxis, YAxis, Tooltip, CartesianGrid,
+  BarChart, Bar,
+  XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine,
 } from 'recharts';
 import { useState, useMemo } from 'react';
 import type { IndicadorSummary } from '@/lib/data';
@@ -12,6 +13,15 @@ import { TAG_LABELS } from '@/lib/hitos';
 import styles from './DetallePage.module.css';
 
 export type IndicadorTipo = 'riesgo-pais' | 'reservas' | 'compras';
+
+interface MulcData {
+  pctHoy: number;
+  volHoy: number;
+  acum5ruedas: number;
+  pctPromedio5: number;
+  acumAnio: number;
+  seriePct: { fecha: string; valor: number }[];
+}
 
 const RANGOS = [
   { label: '1M', dias: 30 },
@@ -60,10 +70,11 @@ interface Props {
   accentColor: string;
   tipo: IndicadorTipo;
   back: string;
+  mulcData?: MulcData;
 }
 
 export default function DetallePage({
-  titulo, subtitulo, data, hitos, accentColor, tipo, back,
+  titulo, subtitulo, data, hitos, accentColor, tipo, back, mulcData,
 }: Props) {
   const [rangoIdx, setRangoIdx] = useState(3);
   const [customDesde, setCustomDesde] = useState('');
@@ -98,6 +109,15 @@ export default function DetallePage({
   const esBueno = invertLogic ? !sube : sube;
   const deltaColor = esBueno ? 'var(--green)' : 'var(--red)';
 
+  // Serie % para el gráfico de barras (rango igual al selector)
+  const seriePctRango = useMemo(() => {
+    if (!mulcData) return [];
+    const desde = modoCustom && customDesde ? customDesde
+      : (() => { const c = new Date(); c.setDate(c.getDate() - RANGOS[rangoIdx].dias); return c.toISOString().slice(0,10); })();
+    const hasta = modoCustom && customHasta ? customHasta : new Date().toISOString().slice(0,10);
+    return mulcData.seriePct.filter(d => d.fecha >= desde && d.fecha <= hasta);
+  }, [mulcData, rangoIdx, modoCustom, customDesde, customHasta]);
+
   return (
     <main className={styles.main}>
       <div className={styles.breadcrumb}>
@@ -120,6 +140,38 @@ export default function DetallePage({
         </div>
       </header>
 
+      {/* Panel MULC — solo para compras */}
+      {mulcData && (
+        <div className={styles.mulcPanel}>
+          <div className={styles.mulcKpis}>
+            <div className={styles.mulcKpi}>
+              <div className={styles.mulcKpiLabel}>% MULC hoy</div>
+              <div className={styles.mulcKpiValue} style={{ color: 'var(--green)' }}>
+                {mulcData.pctHoy}%
+              </div>
+            </div>
+            <div className={styles.mulcKpi}>
+              <div className={styles.mulcKpiLabel}>Vol. MULC hoy</div>
+              <div className={styles.mulcKpiValue}>{mulcData.volHoy.toLocaleString('es-AR')} MM</div>
+            </div>
+            <div className={styles.mulcKpi}>
+              <div className={styles.mulcKpiLabel}>Últ. 5 ruedas</div>
+              <div className={styles.mulcKpiValue}>+{mulcData.acum5ruedas.toLocaleString('es-AR')} MM</div>
+            </div>
+            <div className={styles.mulcKpi}>
+              <div className={styles.mulcKpiLabel}>% prom. 5 ruedas</div>
+              <div className={styles.mulcKpiValue}>{mulcData.pctPromedio5}%</div>
+            </div>
+            <div className={styles.mulcKpi}>
+              <div className={styles.mulcKpiLabel}>Acum. 2026</div>
+              <div className={styles.mulcKpiValue} style={{ color: 'var(--green)' }}>
+                +{Math.round(mulcData.acumAnio).toLocaleString('es-AR')} MM
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={styles.rangeRow}>
         {RANGOS.map((r, i) => (
           <button
@@ -141,28 +193,22 @@ export default function DetallePage({
       {modoCustom && (
         <div className={styles.customRow}>
           <span className={styles.customLabel}>Desde</span>
-          <input
-            type="date"
-            className={styles.dateInput}
-            value={customDesde}
-            min="2000-01-01"
-            max={customHasta || new Date().toISOString().slice(0,10)}
-            onChange={e => setCustomDesde(e.target.value)}
-          />
+          <input type="date" className={styles.dateInput} value={customDesde}
+            min="2000-01-01" max={customHasta || new Date().toISOString().slice(0,10)}
+            onChange={e => setCustomDesde(e.target.value)} />
           <span className={styles.customLabel}>Hasta</span>
-          <input
-            type="date"
-            className={styles.dateInput}
-            value={customHasta}
-            min={customDesde || '2000-01-01'}
-            max={new Date().toISOString().slice(0,10)}
-            onChange={e => setCustomHasta(e.target.value)}
-          />
+          <input type="date" className={styles.dateInput} value={customHasta}
+            min={customDesde || '2000-01-01'} max={new Date().toISOString().slice(0,10)}
+            onChange={e => setCustomHasta(e.target.value)} />
         </div>
       )}
 
+      {/* Gráfico principal */}
       <div className={styles.chartWrap}>
-        <ResponsiveContainer width="100%" height={340}>
+        <div className={styles.chartLabel}>
+          {tipo === 'compras' ? 'Compras diarias BCRA (USD MM)' : ''}
+        </div>
+        <ResponsiveContainer width="100%" height={280}>
           <AreaChart data={serie} margin={{ top: 8, right: 8, bottom: 40, left: 0 }}>
             <defs>
               <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
@@ -171,78 +217,79 @@ export default function DetallePage({
               </linearGradient>
             </defs>
             <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-            <XAxis
-              dataKey="fecha"
+            <XAxis dataKey="fecha"
               tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
-              tickLine={false}
-              axisLine={false}
+              tickLine={false} axisLine={false}
               tickFormatter={(v) => shortDate(v, totalDias)}
-              interval="preserveStartEnd"
-              angle={-35}
-              textAnchor="end"
-              height={50}
-            />
-            <YAxis
-              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
-              tickLine={false}
-              axisLine={false}
-              width={65}
+              interval="preserveStartEnd" angle={-35} textAnchor="end" height={50} />
+            <YAxis tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+              tickLine={false} axisLine={false} width={55}
               tickFormatter={(v: number) => {
-                if (Math.abs(v) >= 1000) return (v / 1000).toFixed(v % 1000 === 0 ? 0 : 1) + 'k';
+                if (Math.abs(v) >= 1000) return (v/1000).toFixed(1) + 'k';
                 return v.toString();
-              }}
-            />
+              }} />
             <Tooltip
-              contentStyle={{
-                background: '#13181f',
-                border: '1px solid rgba(255,255,255,0.14)',
-                borderRadius: 8,
-                fontSize: 13,
-                fontFamily: 'Inter',
-              }}
+              contentStyle={{ background: '#13181f', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, fontSize: 13, fontFamily: 'Inter' }}
               labelStyle={{ color: '#adbac7', marginBottom: 4 }}
               itemStyle={{ color: accentColor }}
               labelFormatter={(v: string) => formatFecha(v)}
-              formatter={(v: number) => [formatValor(tipo, v), '']}
-            />
-            <Area
-              type="monotone"
-              dataKey="valor"
-              stroke={accentColor}
-              strokeWidth={2}
-              fill="url(#areaGrad)"
-              dot={false}
-              activeDot={{ r: 4, fill: accentColor, strokeWidth: 0 }}
-            />
+              formatter={(v: number) => [formatValor(tipo, v), '']} />
+            <Area type="monotone" dataKey="valor" stroke={accentColor} strokeWidth={2}
+              fill="url(#areaGrad)" dot={false}
+              activeDot={{ r: 4, fill: accentColor, strokeWidth: 0 }} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
+      {/* Gráfico % MULC — solo para compras */}
+      {mulcData && seriePctRango.length > 0 && (
+        <div className={styles.mulcChartWrap}>
+          <div className={styles.chartLabel}>Compras BCRA como % del volumen MULC</div>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={seriePctRango} margin={{ top: 8, right: 8, bottom: 40, left: 0 }}>
+              <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+              <XAxis dataKey="fecha"
+                tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+                tickLine={false} axisLine={false}
+                tickFormatter={(v) => shortDate(v, totalDias)}
+                interval="preserveStartEnd" angle={-35} textAnchor="end" height={50} />
+              <YAxis tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+                tickLine={false} axisLine={false} width={40}
+                tickFormatter={(v: number) => v + '%'} />
+              <Tooltip
+                contentStyle={{ background: '#13181f', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, fontSize: 13, fontFamily: 'Inter' }}
+                labelStyle={{ color: '#adbac7', marginBottom: 4 }}
+                labelFormatter={(v: string) => formatFecha(v)}
+                formatter={(v: number) => [v + '%', '% MULC']} />
+              <ReferenceLine y={mulcData.pctPromedio5} stroke="#d29922" strokeDasharray="4 4" strokeOpacity={0.8} />
+              <Bar dataKey="valor" fill="var(--green)" fillOpacity={0.8} radius={[2,2,0,0]} />
+            </BarChart>
+          </ResponsiveContainer>
+          <div className={styles.mulcLegend}>
+            <span style={{ color: '#d29922' }}>── </span>
+            <span style={{ color: '#6e7f8d', fontSize: 11 }}>Promedio 5 ruedas: {mulcData.pctPromedio5}%</span>
+          </div>
+        </div>
+      )}
+
       {hitosEnRango.length > 0 && (
         <div className={styles.hitosSection}>
           <div className={styles.hitosTitle}>Hitos en el período</div>
-          {[...hitosEnRango]
-            .sort((a, b) => b.fecha.localeCompare(a.fecha))
-            .map(h => (
-              <div key={h.id} className={styles.hitoItem}>
-                <div className={styles.hitoLeft}>
-                  <div className={styles.hitoDot} style={{ background: TAG_COLORS[h.tag] }} />
-                </div>
-                <div>
-                  <div className={styles.hitoMeta}>
-                    <span className={styles.hitoTag} style={{ color: TAG_COLORS[h.tag] }}>
-                      {TAG_LABELS[h.tag]}
-                    </span>
-                    <span className={styles.hitoFecha}>{formatFecha(h.fecha)}</span>
-                    {h.automatico && <span className={styles.hitoAuto}>auto</span>}
-                  </div>
-                  <div className={styles.hitoTitulo}>{h.titulo}</div>
-                  {h.descripcion && (
-                    <div className={styles.hitoDesc}>{h.descripcion}</div>
-                  )}
-                </div>
+          {[...hitosEnRango].sort((a, b) => b.fecha.localeCompare(a.fecha)).map(h => (
+            <div key={h.id} className={styles.hitoItem}>
+              <div className={styles.hitoLeft}>
+                <div className={styles.hitoDot} style={{ background: TAG_COLORS[h.tag] }} />
               </div>
-            ))}
+              <div>
+                <div className={styles.hitoMeta}>
+                  <span className={styles.hitoTag} style={{ color: TAG_COLORS[h.tag] }}>{TAG_LABELS[h.tag]}</span>
+                  <span className={styles.hitoFecha}>{formatFecha(h.fecha)}</span>
+                </div>
+                <div className={styles.hitoTitulo}>{h.titulo}</div>
+                {h.descripcion && <div className={styles.hitoDesc}>{h.descripcion}</div>}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </main>
