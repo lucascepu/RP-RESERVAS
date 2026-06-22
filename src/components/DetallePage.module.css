@@ -194,3 +194,59 @@
   color: var(--text-secondary);
   line-height: 1.5;
 }
+
+.mulcPanel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.mulcKpis {
+  display: flex;
+  gap: 0;
+  flex-wrap: wrap;
+}
+
+.mulcKpi {
+  flex: 1;
+  min-width: 120px;
+  padding: 0 1rem;
+  border-right: 1px solid var(--border);
+}
+
+.mulcKpi:first-child { padding-left: 0; }
+.mulcKpi:last-child { border-right: none; }
+
+.mulcKpiLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+}
+
+.mulcKpiValue {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.mulcChartWrap {
+  margin-bottom: 1.5rem;
+}
+
+.chartLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+.mulcLegend {
+  margin-top: 6px;
+  font-size: 12px;
+}
