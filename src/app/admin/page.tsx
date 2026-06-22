@@ -21,12 +21,36 @@ export default function AdminPage() {
   const [comprasUltimo, setComprasUltimo] = useState<{ f: string; v: number } | null>(null);
   const [comprasEstado, setComprasEstado] = useState<'idle' | 'ok' | 'error'>('idle');
 
+  const [rp, setRp] = useState('');
+  const [rpUltimo, setRpUltimo] = useState<{ f: string; v: number } | null>(null);
+  const [rpEstado, setRpEstado] = useState<'idle' | 'ok' | 'error'>('idle');
+
   useEffect(() => {
     if (autenticado) {
       fetch('/api/reservas').then(r => r.json()).then(d => setReservasUltimo(d.ultimo));
       fetch('/api/compras').then(r => r.json()).then(d => setComprasUltimo(d.ultimo));
+      fetch('/api/riesgo-pais').then(r => r.json()).then(d => setRpUltimo(d.ultimo));
     }
   }, [autenticado]);
+
+  const handleGuardarRP = async () => {
+    const valor = parseFloat(rp.replace(',', '.'));
+    if (!rp || isNaN(valor)) return;
+    const res = await fetch('/api/riesgo-pais', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin, fecha, valor }),
+    });
+    if (res.ok) {
+      const d = await res.json();
+      setRpEstado('ok');
+      setRpUltimo(d.ultimo);
+      setRp('');
+      setTimeout(() => setRpEstado('idle'), 3000);
+    } else {
+      setRpEstado('error');
+    }
+  };
 
   const handlePinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,6 +211,29 @@ export default function AdminPage() {
           </button>
           {comprasEstado === 'ok' && <div className={styles.ok}>✓ Guardado correctamente</div>}
           {comprasEstado === 'error' && <div className={styles.error}>Error al guardar</div>}
+        </div>
+        <div className={styles.card}>
+          <div className={styles.cardTitulo}>📉 Riesgo País</div>
+          {rpUltimo && (
+            <div className={styles.ultimoBox}>
+              Último: <strong>{rpUltimo.f}</strong> → {rpUltimo.v.toLocaleString('es-AR')} pbs
+            </div>
+          )}
+          <div className={styles.field}>
+            <label>Puntos básicos (pbs)</label>
+            <input
+              type="number"
+              placeholder="ej: 421"
+              value={rp}
+              onChange={e => setRp(e.target.value)}
+              className={styles.input}
+            />
+          </div>
+          <button className={styles.guardar} onClick={handleGuardarRP} disabled={!rp}>
+            Guardar RP
+          </button>
+          {rpEstado === 'ok' && <div className={styles.ok}>✓ Guardado correctamente</div>}
+          {rpEstado === 'error' && <div className={styles.error}>Error al guardar</div>}
         </div>
       </div>
     </main>
