@@ -21,8 +21,6 @@ export default async function Home() {
   const resData = reservas.status === 'fulfilled' ? reservas.value : null;
   const compData = compras.status === 'fulfilled' ? compras.value : null;
 
-  const hoyStr = new Date().toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
-
   return (
     <main className={styles.main}>
       <header className={styles.header}>
@@ -50,8 +48,8 @@ export default async function Home() {
             href="/riesgo-pais"
             accentColor="#a78bfa"
             invertLogic={true}
-            subInfo={`YTD: ${fmtDelta(rpData.ytd, 'pbs')} · MTD: ${fmtDelta(rpData.mtd, 'pbs')}`}
             badge={rpData.badge}
+            subInfo={`YTD: ${fmtDelta(rpData.ytd, 'pbs')} · MTD: ${fmtDelta(rpData.mtd, 'pbs')}`}
           />
         ) : <CardError label="Riesgo País" />}
 
@@ -71,15 +69,17 @@ export default async function Home() {
         {compData ? (
           <KpiCard
             label="Compras BCRA"
-            value={compData.hoy > 0 ? `+${compData.hoy.toLocaleString('es-AR')}` : compData.hoy.toLocaleString('es-AR')}
+            value={compData.hoy > 0
+              ? `+${compData.hoy.toLocaleString('es-AR')}`
+              : compData.hoy.toLocaleString('es-AR')}
             unit={compData.fechaHoy === new Date().toISOString().slice(0, 10)
               ? 'USD MM hoy'
               : `USD MM (${compData.fechaHoy.slice(8, 10)}/${compData.fechaHoy.slice(5, 7)})`}
             href="/compras"
             accentColor="var(--green)"
             hideVariacion={true}
-            subInfo={`${hoyStr}: +${compData.acumMes.toLocaleString('es-AR')} MM`}
-            subInfo2={`Acum. 2026: +${compData.acumAnio.toLocaleString('es-AR')} MM`}
+            subInfo={`${compData.pctMulcHoy}% del MULC · Vol: ${compData.volMulcHoy.toLocaleString('es-AR')} MM`}
+            subInfo2={`5 ruedas: +${compData.acum5ruedas.toLocaleString('es-AR')} MM · 2026: +${Math.round(compData.acumAnio).toLocaleString('es-AR')} MM`}
           />
         ) : <CardError label="Compras BCRA" />}
       </section>
@@ -101,7 +101,7 @@ function CardError({ label }: { label: string }) {
       color: 'var(--text-tertiary)',
       fontSize: 13,
     }}>
-      <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8, fontFamily: 'Inter, monospace' }}>
+      <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
         {label}
       </div>
       Sin datos disponibles
