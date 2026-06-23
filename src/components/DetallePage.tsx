@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import {
   ResponsiveContainer, AreaChart, Area,
-  BarChart, Bar,
+  ComposedChart, BarChart, Bar, Line,
   XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine,
 } from 'recharts';
 import { useState, useMemo } from 'react';
@@ -27,9 +27,6 @@ const RANGOS = [
   { label: '1M', dias: 30 },
   { label: '3M', dias: 90 },
   { label: '6M', dias: 180 },
-  { label: '1A', dias: 365 },
-  { label: '3A', dias: 365 * 3 },
-  { label: '5A', dias: 365 * 5 },
   { label: 'Todo', dias: 365 * 30 },
 ];
 
@@ -46,6 +43,15 @@ function formatValor(tipo: IndicadorTipo, v: number): string {
   if (tipo === 'riesgo-pais') return v.toLocaleString('es-AR') + ' pbs';
   if (tipo === 'reservas') return 'USD ' + (v / 1000).toFixed(1) + ' MM';
   return (v >= 0 ? '+' : '') + v.toLocaleString('es-AR') + ' MM';
+}
+
+function movingAverage(data: DataPoint[], n: number): DataPoint[] {
+  return data.map((d, i) => {
+    if (i < n - 1) return { fecha: d.fecha, valor: NaN };
+    const slice = data.slice(i - n + 1, i + 1);
+    const avg = slice.reduce((sum, p) => sum + p.valor, 0) / n;
+    return { fecha: d.fecha, valor: Math.round(avg * 10) / 10 };
+  }).filter(d => !isNaN(d.valor));
 }
 
 function formatFecha(iso: string) {
@@ -218,38 +224,74 @@ export default function DetallePage({
         <div className={styles.chartLabel}>
           {tipo === 'compras' ? 'Compras diarias BCRA (USD MM)' : ''}
         </div>
-        <ResponsiveContainer width="100%" height={280}>
-          <AreaChart data={serie} margin={{ top: 8, right: 8, bottom: 40, left: 0 }}>
-            <defs>
-              <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={accentColor} stopOpacity={0.18} />
-                <stop offset="95%" stopColor={accentColor} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-            <XAxis dataKey="fecha"
-              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
-              tickLine={false} axisLine={false}
-              tickFormatter={(v) => shortDate(v, totalDias)}
-              interval="preserveStartEnd" angle={-35} textAnchor="end" height={50} />
-            <YAxis tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
-              tickLine={false} axisLine={false} width={55}
-              tickFormatter={(v: number) => {
-                if (Math.abs(v) >= 1000) return (v/1000).toFixed(1) + 'k';
-                return v.toString();
-              }} />
-            <Tooltip
-              contentStyle={{ background: '#13181f', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, fontSize: 13, fontFamily: 'Inter' }}
-              labelStyle={{ color: '#adbac7', marginBottom: 4 }}
-              itemStyle={{ color: accentColor }}
-              labelFormatter={(v: string) => formatFecha(v)}
-              formatter={(v: number) => [formatValor(tipo, v), '']} />
-            <Area type="monotone" dataKey="valor" stroke={accentColor} strokeWidth={2}
-              fill="url(#areaGrad)" dot={false}
-              activeDot={{ r: 4, fill: accentColor, strokeWidth: 0 }} />
-          </AreaChart>
-        </ResponsiveContainer>
+        {(() => {
+          const ma5 = tipo === 'compras' ? movingAverage(serie, 5) : [];
+          const ma20 = tipo === 'compras' ? movingAverage(serie, 20) : [];
+          const ma5Map = Object.fromEntries(ma5.map(d => [d.fecha, d.valor]));
+          const ma20Map = Object.fromEntries(ma20.map(d => [d.fecha, d.valor]));
+          const serieConMA = serie.map(d => ({
+            ...d,
+            ma5: ma5Map[d.fecha],
+            ma20: ma20Map[d.fecha],
+          }));
+          return (
+            <ResponsiveContainer width="100%" height={280}>
+              <ComposedChart data={tipo === 'compras' ? serieConMA : serie} margin={{ top: 8, right: 8, bottom: 40, left: 0 }}>
+                <defs>
+                  <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={accentColor} stopOpacity={0.18} />
+                    <stop offset="95%" stopColor={accentColor} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                <XAxis dataKey="fecha"
+                  tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+                  tickLine={false} axisLine={false}
+                  tickFormatter={(v) => shortDate(v, totalDias)}
+                  interval="preserveStartEnd" angle={-35} textAnchor="end" height={50} />
+                <YAxis tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+                  tickLine={false} axisLine={false} width={55}
+                  tickFormatter={(v: number) => {
+                    if (Math.abs(v) >= 1000) return (v/1000).toFixed(1) + 'k';
+                    return v.toString();
+                  }} />
+                <Tooltip
+                  contentStyle={{ background: '#13181f', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, fontSize: 13, fontFamily: 'Inter' }}
+                  labelStyle={{ color: '#adbac7', marginBottom: 4 }}
+                  labelFormatter={(v: string) => formatFecha(v)}
+                  formatter={(v: number, name: string) => {
+                    if (name === 'valor') return [formatValor(tipo, v), 'Diario'];
+                    if (name === 'ma5') return [formatValor(tipo, v), 'MA 5'];
+                    if (name === 'ma20') return [formatValor(tipo, v), 'MA 20'];
+                    return [v, name];
+                  }} />
+                <Area type="monotone" dataKey="valor" stroke={accentColor} strokeWidth={1.5}
+                  fill="url(#areaGrad)" dot={false}
+                  activeDot={{ r: 4, fill: accentColor, strokeWidth: 0 }} />
+                {tipo === 'compras' && (
+                  <Line type="monotone" dataKey="ma5" stroke="#d29922" strokeWidth={2}
+                    dot={false} connectNulls={false} strokeDasharray="0" />
+                )}
+                {tipo === 'compras' && (
+                  <Line type="monotone" dataKey="ma20" stroke="#58a6ff" strokeWidth={2}
+                    dot={false} connectNulls={false} />
+                )}
+              </ComposedChart>
+            </ResponsiveContainer>
+          );
+        })()}
       </div>
+
+      {tipo === 'compras' && (
+        <div className={styles.maLegend}>
+          <span style={{ color: 'var(--green)' }}>─── </span>
+          <span style={{ color: '#6e7f8d', fontSize: 11 }}>Diario</span>
+          <span style={{ color: '#d29922', marginLeft: 12 }}>─── </span>
+          <span style={{ color: '#6e7f8d', fontSize: 11 }}>MA 5 ruedas</span>
+          <span style={{ color: '#58a6ff', marginLeft: 12 }}>─── </span>
+          <span style={{ color: '#6e7f8d', fontSize: 11 }}>MA 20 ruedas</span>
+        </div>
+      )}
 
       {/* Gráfico % MULC — solo para compras */}
       {mulcData && seriePctRango.length > 0 && (
