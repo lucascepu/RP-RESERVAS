@@ -334,3 +334,10 @@
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
+
+.rangeSep {
+  color: var(--border-hover);
+  font-size: 14px;
+  padding: 0 2px;
+  user-select: none;
+}
