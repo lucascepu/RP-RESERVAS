@@ -88,6 +88,7 @@ export default function DetallePage({
   const [customDesde, setCustomDesde] = useState('');
   const [customHasta, setCustomHasta] = useState('');
   const [modoCustom, setModoCustom] = useState(false);
+  const [showMA, setShowMA] = useState(true);
 
   const { serie, hitosEnRango, totalDias } = useMemo(() => {
     let desde: string;
@@ -190,6 +191,34 @@ export default function DetallePage({
         </div>
       )}
 
+      {kpiMensual && (
+        <div className={styles.mensualPanel}>
+          <div className={styles.mensualTitulo}>
+            {kpiMensual.mesNombre.charAt(0).toUpperCase() + kpiMensual.mesNombre.slice(1)} 2026
+          </div>
+          <div className={styles.mensualKpis}>
+            <div className={styles.mensualKpi}>
+              <div className={styles.mensualLabel}>Comprado</div>
+              <div className={styles.mensualVal} style={{ color: 'var(--green)' }}>
+                +{kpiMensual.compradoMes.toLocaleString('es-AR')} MM
+              </div>
+            </div>
+            <div className={styles.mensualKpi}>
+              <div className={styles.mensualLabel}>Prom. diario</div>
+              <div className={styles.mensualVal}>{kpiMensual.promDiario} MM</div>
+            </div>
+            <div className={styles.mensualKpi}>
+              <div className={styles.mensualLabel}>% MULC prom.</div>
+              <div className={styles.mensualVal}>{kpiMensual.pctPromMes}%</div>
+            </div>
+            <div className={styles.mensualKpi}>
+              <div className={styles.mensualLabel}>Ruedas</div>
+              <div className={styles.mensualVal}>{kpiMensual.diasMes}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={styles.rangeRow}>
         {RANGOS.map((r, i) => (
           <button
@@ -223,8 +252,20 @@ export default function DetallePage({
 
       {/* Gráfico principal */}
       <div className={styles.chartWrap}>
-        <div className={styles.chartLabel}>
-          {tipo === 'compras' ? 'Compras diarias BCRA (USD MM)' : ''}
+        <div className={styles.chartHeader}>
+          <div className={styles.chartLabel}>
+            {tipo === 'compras' ? 'Compras diarias BCRA (USD MM)' : ''}
+          </div>
+          {tipo === 'compras' && (
+            <div className={styles.maToggle}>
+              <button
+                className={`${styles.maBtn} ${showMA ? styles.maBtnActive : ''}`}
+                onClick={() => setShowMA(v => !v)}
+              >
+                {showMA ? 'Ocultar MA' : 'Mostrar MA'}
+              </button>
+            </div>
+          )}
         </div>
         {(() => {
           const ma5 = tipo === 'compras' ? movingAverage(serie, 5) : [];
@@ -270,11 +311,11 @@ export default function DetallePage({
                 <Area type="monotone" dataKey="valor" stroke={accentColor} strokeWidth={1.5}
                   fill="url(#areaGrad)" dot={false}
                   activeDot={{ r: 4, fill: accentColor, strokeWidth: 0 }} />
-                {tipo === 'compras' && (
+                {tipo === 'compras' && showMA && (
                   <Line type="monotone" dataKey="ma5" stroke="#d29922" strokeWidth={2}
                     dot={false} connectNulls={false} strokeDasharray="0" />
                 )}
-                {tipo === 'compras' && (
+                {tipo === 'compras' && showMA && (
                   <Line type="monotone" dataKey="ma20" stroke="#58a6ff" strokeWidth={2}
                     dot={false} connectNulls={false} />
                 )}
@@ -299,8 +340,22 @@ export default function DetallePage({
       {mulcData && seriePctRango.length > 0 && (
         <div className={styles.mulcChartWrap}>
           <div className={styles.chartLabel}>Compras BCRA como % del volumen MULC</div>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={seriePctRango} margin={{ top: 8, right: 8, bottom: 40, left: 0 }}>
+          <ResponsiveContainer width="100%" height={220}>
+            <ComposedChart data={seriePctRango} margin={{ top: 8, right: 8, bottom: 40, left: 0 }}>
+              <defs>
+                <linearGradient id="bandaMarginal" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#6e7f8d" stopOpacity={0.06} />
+                </linearGradient>
+                <linearGradient id="bandaRelevante" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#2ea043" stopOpacity={0.07} />
+                </linearGradient>
+                <linearGradient id="bandaDominante" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#d29922" stopOpacity={0.08} />
+                </linearGradient>
+                <linearGradient id="bandaFuerte" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#f85149" stopOpacity={0.1} />
+                </linearGradient>
+              </defs>
               <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
               <XAxis dataKey="fecha"
                 tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
@@ -309,19 +364,39 @@ export default function DetallePage({
                 interval="preserveStartEnd" angle={-35} textAnchor="end" height={50} />
               <YAxis tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
                 tickLine={false} axisLine={false} width={40}
-                tickFormatter={(v: number) => v + '%'} />
+                tickFormatter={(v: number) => v + '%'}
+                domain={[0, 'auto']} />
               <Tooltip
                 contentStyle={{ background: '#13181f', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, fontSize: 13, fontFamily: 'Inter' }}
                 labelStyle={{ color: '#adbac7', marginBottom: 4 }}
                 labelFormatter={(v: string) => formatFecha(v)}
-                formatter={(v: number) => [v + '%', '% MULC']} />
-              <ReferenceLine y={mulcData.pctPromedio5} stroke="#d29922" strokeDasharray="4 4" strokeOpacity={0.8} />
-              <Bar dataKey="valor" fill="var(--green)" fillOpacity={0.8} radius={[2,2,0,0]} />
-            </BarChart>
+                formatter={(v: number, name: string) => {
+                  if (name === 'valor') return [v + '%', '% MULC'];
+                  if (name === 'ma20pct') return [v + '%', 'MA 20'];
+                  return [v, name];
+                }} />
+              {/* Bandas de interpretación */}
+              <ReferenceLine y={10} stroke="rgba(110,127,141,0.3)" strokeDasharray="2 4" />
+              <ReferenceLine y={25} stroke="rgba(46,160,67,0.3)" strokeDasharray="2 4" />
+              <ReferenceLine y={50} stroke="rgba(210,153,34,0.3)" strokeDasharray="2 4" />
+              {/* Labels de bandas */}
+              <ReferenceLine y={5} stroke="transparent"
+                label={{ value: 'Marginal', position: 'insideTopRight', fontSize: 9, fill: 'rgba(110,127,141,0.5)' }} />
+              <ReferenceLine y={17} stroke="transparent"
+                label={{ value: 'Relevante', position: 'insideTopRight', fontSize: 9, fill: 'rgba(46,160,67,0.4)' }} />
+              <ReferenceLine y={37} stroke="transparent"
+                label={{ value: 'Dominante', position: 'insideTopRight', fontSize: 9, fill: 'rgba(210,153,34,0.4)' }} />
+              {/* MA 20 punteada */}
+              <ReferenceLine y={mulcData.pctPromedio5} stroke="#d29922" strokeDasharray="4 4" strokeOpacity={0.7} />
+              <Line type="monotone" dataKey="valor" stroke="var(--green)" strokeWidth={2}
+                dot={false} connectNulls={false} />
+            </ComposedChart>
           </ResponsiveContainer>
           <div className={styles.mulcLegend}>
-            <span style={{ color: '#d29922' }}>── </span>
-            <span style={{ color: '#6e7f8d', fontSize: 11 }}>Promedio 5 ruedas: {mulcData.pctPromedio5}%</span>
+            <span style={{ color: 'var(--green)' }}>─── </span>
+            <span style={{ color: '#6e7f8d', fontSize: 11 }}>% MULC diario</span>
+            <span style={{ color: '#d29922', marginLeft: 12 }}>- - - </span>
+            <span style={{ color: '#6e7f8d', fontSize: 11 }}>Prom. 5 ruedas: {mulcData.pctPromedio5}%</span>
           </div>
         </div>
       )}
