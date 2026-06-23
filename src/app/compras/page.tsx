@@ -35,6 +35,7 @@ export default async function ComprasPage() {
         pctHoy: data.pctMulcHoy,
         volHoy: data.volMulcHoy,
         acum5ruedas: data.acum5ruedas,
+        prom5ruedas: data.prom5ruedas,
         pctPromedio5: data.pctPromedio5ruedas,
         acumAnio: data.acumAnio,
         seriePct: data.seriePct,
