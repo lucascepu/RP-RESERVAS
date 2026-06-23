@@ -32,6 +32,7 @@ export interface ComprasSummary {
   pctMulcHoy: number;
   volMulcHoy: number;
   acum5ruedas: number;
+  prom5ruedas: number;
   pctPromedio5ruedas: number;
   serieCompras: DataPoint[];
   seriePct: DataPoint[];
@@ -188,6 +189,8 @@ export async function getCompras(): Promise<ComprasSummary> {
       valor: Math.round(d.valor / mulcDict[d.fecha] * 1000) / 10,
     }));
 
+  const prom5ruedas = Math.round(acum5ruedas / ultimas5.length * 10) / 10;
+
   return {
     hoy: compraDiaria,
     fechaHoy: last.fecha,
@@ -196,6 +199,7 @@ export async function getCompras(): Promise<ComprasSummary> {
     pctMulcHoy,
     volMulcHoy,
     acum5ruedas: Math.round(acum5ruedas * 10) / 10,
+    prom5ruedas,
     pctPromedio5ruedas: Math.round(pctPromedio5ruedas * 10) / 10,
     serieCompras: serie,
     seriePct,
