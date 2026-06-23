@@ -89,6 +89,46 @@ export default function DetallePage({
   const [customHasta, setCustomHasta] = useState('');
   const [modoCustom, setModoCustom] = useState(false);
   const [showMA, setShowMA] = useState(true);
+  const [modoMensual, setModoMensual] = useState(false);
+
+  // Serie mensual para compras
+  const serieMensual = useMemo(() => {
+    if (!mulcData) return [];
+    const porMes: Record<string, { compras: number; mulcVol: number; dias: number }> = {};
+    data.serie.forEach(d => {
+      const mes = d.fecha.slice(0, 7);
+      if (!porMes[mes]) porMes[mes] = { compras: 0, mulcVol: 0, dias: 0 };
+      porMes[mes].compras += d.valor;
+      porMes[mes].dias += 1;
+    });
+    mulcData.seriePct.forEach(d => {
+      const mes = d.fecha.slice(0, 7);
+      if (porMes[mes]) {
+        // Reconstruir vol desde pct y compras diarias
+      }
+    });
+    // Calcular pct mensual desde seriePct
+    const pctPorMes: Record<string, number[]> = {};
+    mulcData.seriePct.forEach(d => {
+      const mes = d.fecha.slice(0, 7);
+      if (!pctPorMes[mes]) pctPorMes[mes] = [];
+      pctPorMes[mes].push(d.valor);
+    });
+    return Object.entries(porMes).sort(([a], [b]) => a.localeCompare(b)).map(([mes, v]) => {
+      const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+      const [y, m] = mes.split('-');
+      const pcts = pctPorMes[mes] || [];
+      const pctProm = pcts.length > 0 ? Math.round(pcts.reduce((s,p) => s+p, 0) / pcts.length * 10) / 10 : 0;
+      return {
+        fecha: mes,
+        label: `${meses[parseInt(m)-1]} ${y.slice(2)}`,
+        compras: Math.round(v.compras),
+        pctProm,
+        diasMes: v.dias,
+        promDiario: Math.round(v.compras / v.dias),
+      };
+    });
+  }, [data.serie, mulcData]);
 
   const { serie, hitosEnRango, totalDias } = useMemo(() => {
     let desde: string;
@@ -167,7 +207,34 @@ export default function DetallePage({
             </div>
           )}
           <div className={styles.kpiFecha}>
-            {(() => {
+            {modoMensual && tipo === 'compras' ? (
+        <ResponsiveContainer width="100%" height={280}>
+          <ComposedChart data={serieMensual} margin={{ top: 8, right: 8, bottom: 40, left: 0 }}>
+            <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+            <XAxis dataKey="label"
+              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+              tickLine={false} axisLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+              tickLine={false} axisLine={false} width={50} />
+            <Tooltip
+              contentStyle={{ background: '#13181f', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, fontSize: 13, fontFamily: 'Inter' }}
+              labelStyle={{ color: '#adbac7', marginBottom: 4 }}
+              formatter={(v: number, name: string) => {
+                if (name === 'compras') return [v.toLocaleString('es-AR') + ' MM', 'Comprado'];
+                if (name === 'pctProm') return [v + '%', '% MULC prom.'];
+                return [v, name];
+              }} />
+            <Bar dataKey="compras" fill="var(--green)" fillOpacity={0.8} radius={[3,3,0,0]} />
+            <Line type="monotone" dataKey="pctProm" stroke="#d29922" strokeWidth={1.5}
+              dot={{ r: 3, fill: '#d29922' }} yAxisId="right" />
+            <YAxis yAxisId="right" orientation="right"
+              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+              tickLine={false} axisLine={false} width={35}
+              tickFormatter={(v: number) => v + '%'} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      ) : (
+      {(() => {
               const hoy = new Date().toISOString().slice(0, 10);
               const esHoy = data.fecha === hoy;
               return esHoy
@@ -210,50 +277,33 @@ export default function DetallePage({
         </div>
       )}
 
-      {kpiMensual && (
-        <div className={styles.mensualPanel}>
-          <div className={styles.mensualTitulo}>
-            {kpiMensual.mesNombre.charAt(0).toUpperCase() + kpiMensual.mesNombre.slice(1)} 2026
-          </div>
-          <div className={styles.mensualKpis}>
-            <div className={styles.mensualKpi}>
-              <div className={styles.mensualLabel}>Comprado</div>
-              <div className={styles.mensualVal} style={{ color: 'var(--green)' }}>
-                +{kpiMensual.compradoMes.toLocaleString('es-AR')} MM
-              </div>
-            </div>
-            <div className={styles.mensualKpi}>
-              <div className={styles.mensualLabel}>Prom. diario</div>
-              <div className={styles.mensualVal}>{kpiMensual.promDiario} MM</div>
-            </div>
-            <div className={styles.mensualKpi}>
-              <div className={styles.mensualLabel}>% MULC prom.</div>
-              <div className={styles.mensualVal}>{kpiMensual.pctPromMes}%</div>
-            </div>
-            <div className={styles.mensualKpi}>
-              <div className={styles.mensualLabel}>Ruedas</div>
-              <div className={styles.mensualVal}>{kpiMensual.diasMes}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className={styles.rangeRow}>
         {RANGOS.map((r, i) => (
           <button
             key={r.label}
-            className={`${styles.rangeBtn} ${!modoCustom && rangoIdx === i ? styles.active : ''}`}
-            onClick={() => { setRangoIdx(i); setModoCustom(false); }}
+            className={`${styles.rangeBtn} ${!modoCustom && !modoMensual && rangoIdx === i ? styles.active : ''}`}
+            onClick={() => { setRangoIdx(i); setModoCustom(false); setModoMensual(false); }}
           >
             {r.label}
           </button>
         ))}
         <button
           className={`${styles.rangeBtn} ${modoCustom ? styles.active : ''}`}
-          onClick={() => setModoCustom(true)}
+          onClick={() => { setModoCustom(true); setModoMensual(false); }}
         >
           Custom
         </button>
+        {tipo === 'compras' && (
+          <>
+            <span className={styles.rangeSep}>|</span>
+            <button
+              className={`${styles.rangeBtn} ${modoMensual ? styles.active : ''}`}
+              onClick={() => { setModoMensual(true); setModoCustom(false); }}
+            >
+              Mensual
+            </button>
+          </>
+        )}
       </div>
 
       {modoCustom && (
@@ -273,9 +323,9 @@ export default function DetallePage({
       <div className={styles.chartWrap}>
         <div className={styles.chartHeader}>
           <div className={styles.chartLabel}>
-            {tipo === 'compras' ? 'Compras diarias BCRA (USD MM)' : ''}
+            {modoMensual ? 'Compras mensuales BCRA (USD MM)' : tipo === 'compras' ? 'Compras diarias BCRA (USD MM)' : ''}
           </div>
-          {tipo === 'compras' && (
+          {tipo === 'compras' && !modoMensual && (
             <div className={styles.maToggle}>
               <button
                 className={`${styles.maBtn} ${showMA ? styles.maBtnActive : ''}`}
@@ -286,7 +336,34 @@ export default function DetallePage({
             </div>
           )}
         </div>
-        {(() => {
+        {modoMensual && tipo === 'compras' ? (
+        <ResponsiveContainer width="100%" height={280}>
+          <ComposedChart data={serieMensual} margin={{ top: 8, right: 8, bottom: 40, left: 0 }}>
+            <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+            <XAxis dataKey="label"
+              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+              tickLine={false} axisLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+              tickLine={false} axisLine={false} width={50} />
+            <Tooltip
+              contentStyle={{ background: '#13181f', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, fontSize: 13, fontFamily: 'Inter' }}
+              labelStyle={{ color: '#adbac7', marginBottom: 4 }}
+              formatter={(v: number, name: string) => {
+                if (name === 'compras') return [v.toLocaleString('es-AR') + ' MM', 'Comprado'];
+                if (name === 'pctProm') return [v + '%', '% MULC prom.'];
+                return [v, name];
+              }} />
+            <Bar dataKey="compras" fill="var(--green)" fillOpacity={0.8} radius={[3,3,0,0]} />
+            <Line type="monotone" dataKey="pctProm" stroke="#d29922" strokeWidth={1.5}
+              dot={{ r: 3, fill: '#d29922' }} yAxisId="right" />
+            <YAxis yAxisId="right" orientation="right"
+              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+              tickLine={false} axisLine={false} width={35}
+              tickFormatter={(v: number) => v + '%'} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      ) : (
+      {(() => {
           const ma5 = tipo === 'compras' ? movingAverage(serie, 5) : [];
           const ma20 = tipo === 'compras' ? movingAverage(serie, 20) : [];
           const ma5Map = Object.fromEntries(ma5.map(d => [d.fecha, d.valor]));
@@ -331,12 +408,12 @@ export default function DetallePage({
                   fill="url(#areaGrad)" dot={false}
                   activeDot={{ r: 4, fill: accentColor, strokeWidth: 0 }} />
                 {tipo === 'compras' && showMA && (
-                  <Line type="monotone" dataKey="ma5" stroke="#d29922" strokeWidth={2}
+                  <Line type="monotone" dataKey="ma5" stroke="#d29922" strokeWidth={1.5}
                     dot={false} connectNulls={false} strokeDasharray="0" />
                 )}
                 {tipo === 'compras' && showMA && (
-                  <Line type="monotone" dataKey="ma20" stroke="#58a6ff" strokeWidth={2}
-                    dot={false} connectNulls={false} />
+                  <Line type="monotone" dataKey="ma20" stroke="#58a6ff" strokeWidth={1}
+                    dot={false} connectNulls={false} strokeDasharray="4 2" />
                 )}
               </ComposedChart>
             </ResponsiveContainer>
@@ -344,7 +421,8 @@ export default function DetallePage({
         })()}
       </div>
 
-      {tipo === 'compras' && (
+      )}
+      {tipo === 'compras' && !modoMensual && (
         <div className={styles.maLegend}>
           <span style={{ color: 'var(--green)' }}>─── </span>
           <span style={{ color: '#6e7f8d', fontSize: 11 }}>Diario</span>
