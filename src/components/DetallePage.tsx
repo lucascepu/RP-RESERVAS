@@ -14,13 +14,15 @@ import styles from './DetallePage.module.css';
 
 export type IndicadorTipo = 'riesgo-pais' | 'reservas' | 'compras';
 
+type DataPoint = { fecha: string; valor: number };
+
 interface MulcData {
   pctHoy: number;
   volHoy: number;
   acum5ruedas: number;
   pctPromedio5: number;
   acumAnio: number;
-  seriePct: { fecha: string; valor: number }[];
+  seriePct: DataPoint[];
 }
 
 const RANGOS = [
@@ -45,17 +47,6 @@ function formatValor(tipo: IndicadorTipo, v: number): string {
   return (v >= 0 ? '+' : '') + v.toLocaleString('es-AR') + ' MM';
 }
 
-type DataPoint = { fecha: string; valor: number };
-
-function movingAverage(data: DataPoint[], n: number): DataPoint[] {
-  return data.map((d, i) => {
-    if (i < n - 1) return { fecha: d.fecha, valor: NaN };
-    const slice = data.slice(i - n + 1, i + 1);
-    const avg = slice.reduce((sum, p) => sum + p.valor, 0) / n;
-    return { fecha: d.fecha, valor: Math.round(avg * 10) / 10 };
-  }).filter(d => !isNaN(d.valor));
-}
-
 function formatFecha(iso: string) {
   const [y, m, d] = iso.split('-');
   const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
@@ -68,6 +59,15 @@ function shortDate(iso: string, totalDias: number) {
   if (totalDias > 365 * 2) return `${meses[parseInt(m) - 1]} ${y}`;
   if (totalDias > 365) return `${meses[parseInt(m) - 1]} '${y.slice(2)}`;
   return `${parseInt(d)} ${meses[parseInt(m) - 1]}`;
+}
+
+function movingAverage(data: DataPoint[], n: number): DataPoint[] {
+  return data.map((d, i) => {
+    if (i < n - 1) return { fecha: d.fecha, valor: NaN };
+    const slice = data.slice(i - n + 1, i + 1);
+    const avg = slice.reduce((sum, p) => sum + p.valor, 0) / n;
+    return { fecha: d.fecha, valor: Math.round(avg * 10) / 10 };
+  }).filter(d => !isNaN(d.valor));
 }
 
 interface Props {
@@ -84,51 +84,13 @@ interface Props {
 export default function DetallePage({
   titulo, subtitulo, data, hitos, accentColor, tipo, back, mulcData,
 }: Props) {
-  const [rangoIdx, setRangoIdx] = useState(3);
+  const hoy = new Date().toISOString().slice(0, 10);
+  const [rangoIdx, setRangoIdx] = useState(2);
   const [customDesde, setCustomDesde] = useState('');
   const [customHasta, setCustomHasta] = useState('');
   const [modoCustom, setModoCustom] = useState(false);
-  const [showMA, setShowMA] = useState(true);
   const [modoMensual, setModoMensual] = useState(false);
-
-  // Serie mensual para compras
-  const serieMensual = useMemo(() => {
-    if (!mulcData) return [];
-    const porMes: Record<string, { compras: number; mulcVol: number; dias: number }> = {};
-    data.serie.forEach(d => {
-      const mes = d.fecha.slice(0, 7);
-      if (!porMes[mes]) porMes[mes] = { compras: 0, mulcVol: 0, dias: 0 };
-      porMes[mes].compras += d.valor;
-      porMes[mes].dias += 1;
-    });
-    mulcData.seriePct.forEach(d => {
-      const mes = d.fecha.slice(0, 7);
-      if (porMes[mes]) {
-        // Reconstruir vol desde pct y compras diarias
-      }
-    });
-    // Calcular pct mensual desde seriePct
-    const pctPorMes: Record<string, number[]> = {};
-    mulcData.seriePct.forEach(d => {
-      const mes = d.fecha.slice(0, 7);
-      if (!pctPorMes[mes]) pctPorMes[mes] = [];
-      pctPorMes[mes].push(d.valor);
-    });
-    return Object.entries(porMes).sort(([a], [b]) => a.localeCompare(b)).map(([mes, v]) => {
-      const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-      const [y, m] = mes.split('-');
-      const pcts = pctPorMes[mes] || [];
-      const pctProm = pcts.length > 0 ? Math.round(pcts.reduce((s,p) => s+p, 0) / pcts.length * 10) / 10 : 0;
-      return {
-        fecha: mes,
-        label: `${meses[parseInt(m)-1]} ${y.slice(2)}`,
-        compras: Math.round(v.compras),
-        pctProm,
-        diasMes: v.dias,
-        promDiario: Math.round(v.compras / v.dias),
-      };
-    });
-  }, [data.serie, mulcData]);
+  const [showMA, setShowMA] = useState(true);
 
   const { serie, hitosEnRango, totalDias } = useMemo(() => {
     let desde: string;
@@ -141,50 +103,76 @@ export default function DetallePage({
       const ms = new Date(hasta).getTime() - new Date(desde).getTime();
       dias = Math.ceil(ms / 86400000);
     } else {
-      dias = RANGOS[rangoIdx].dias;
+      dias = RANGOS[rangoIdx]?.dias ?? 180;
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - dias);
       desde = cutoff.toISOString().slice(0, 10);
-      hasta = new Date().toISOString().slice(0, 10);
+      hasta = hoy;
     }
 
     const serie = data.serie.filter(d => d.fecha >= desde && d.fecha <= hasta);
     const hitosEnRango = hitos.filter(h => h.fecha >= desde && h.fecha <= hasta);
     return { serie, hitosEnRango, totalDias: dias };
-  }, [rangoIdx, modoCustom, customDesde, customHasta, data.serie, hitos]);
+  }, [rangoIdx, modoCustom, customDesde, customHasta, data.serie, hitos, hoy]);
 
-  // KPI mensual para compras
-  const kpiMensual = useMemo(() => {
-    if (!mulcData) return null;
-    const hoy = new Date();
-    const inicioMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
-    const serieMes = data.serie.filter(d => d.fecha >= inicioMes);
-    const compradoMes = serieMes.reduce((sum, d) => sum + d.valor, 0);
-    const diasMes = serieMes.length;
-    const promDiario = diasMes > 0 ? Math.round(compradoMes / diasMes * 10) / 10 : 0;
-    const pctsMes = serieMes
-      .filter(d => mulcData.seriePct.find(p => p.fecha === d.fecha))
-      .map(d => mulcData.seriePct.find(p => p.fecha === d.fecha)!.valor);
-    const pctPromMes = pctsMes.length > 0
-      ? Math.round(pctsMes.reduce((s, p) => s + p, 0) / pctsMes.length * 10) / 10
-      : 0;
-    const mesNombre = hoy.toLocaleString('es-AR', { month: 'long' });
-    return { compradoMes: Math.round(compradoMes), diasMes, promDiario, pctPromMes, mesNombre };
+  // Serie mensual
+  const serieMensual = useMemo(() => {
+    if (!mulcData) return [];
+    const porMes: Record<string, { compras: number; dias: number }> = {};
+    data.serie.forEach(d => {
+      const mes = d.fecha.slice(0, 7);
+      if (!porMes[mes]) porMes[mes] = { compras: 0, dias: 0 };
+      porMes[mes].compras += d.valor;
+      porMes[mes].dias += 1;
+    });
+    const pctPorMes: Record<string, number[]> = {};
+    mulcData.seriePct.forEach(d => {
+      const mes = d.fecha.slice(0, 7);
+      if (!pctPorMes[mes]) pctPorMes[mes] = [];
+      pctPorMes[mes].push(d.valor);
+    });
+    const mesesLabel = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    return Object.entries(porMes).sort(([a], [b]) => a.localeCompare(b)).map(([mes, v]) => {
+      const [y, m] = mes.split('-');
+      const pcts = pctPorMes[mes] || [];
+      const pctProm = pcts.length > 0
+        ? Math.round(pcts.reduce((s, p) => s + p, 0) / pcts.length * 10) / 10
+        : 0;
+      return {
+        fecha: mes,
+        label: `${mesesLabel[parseInt(m)-1]} ${y.slice(2)}`,
+        compras: Math.round(v.compras),
+        pctProm,
+        diasMes: v.dias,
+        promDiario: Math.round(v.compras / v.dias),
+      };
+    });
   }, [data.serie, mulcData]);
+
+  // Serie % para gráfico inferior
+  const seriePctRango = useMemo(() => {
+    if (!mulcData) return [];
+    const desde = modoCustom && customDesde ? customDesde
+      : (() => { const c = new Date(); c.setDate(c.getDate() - (RANGOS[rangoIdx]?.dias ?? 180)); return c.toISOString().slice(0,10); })();
+    const hasta = modoCustom && customHasta ? customHasta : hoy;
+    return mulcData.seriePct.filter(d => d.fecha >= desde && d.fecha <= hasta);
+  }, [mulcData, rangoIdx, modoCustom, customDesde, customHasta, hoy]);
 
   const sube = data.variacion >= 0;
   const invertLogic = INVERT_LOGIC.includes(tipo);
   const esBueno = invertLogic ? !sube : sube;
   const deltaColor = esBueno ? 'var(--green)' : 'var(--red)';
 
-  // Serie % para el gráfico de barras (rango igual al selector)
-  const seriePctRango = useMemo(() => {
-    if (!mulcData) return [];
-    const desde = modoCustom && customDesde ? customDesde
-      : (() => { const c = new Date(); c.setDate(c.getDate() - RANGOS[rangoIdx].dias); return c.toISOString().slice(0,10); })();
-    const hasta = modoCustom && customHasta ? customHasta : new Date().toISOString().slice(0,10);
-    return mulcData.seriePct.filter(d => d.fecha >= desde && d.fecha <= hasta);
-  }, [mulcData, rangoIdx, modoCustom, customDesde, customHasta]);
+  // MA
+  const ma5 = tipo === 'compras' ? movingAverage(serie, 5) : [];
+  const ma20 = tipo === 'compras' ? movingAverage(serie, 20) : [];
+  const ma5Map = Object.fromEntries(ma5.map(d => [d.fecha, d.valor]));
+  const ma20Map = Object.fromEntries(ma20.map(d => [d.fecha, d.valor]));
+  const serieConMA = serie.map(d => ({
+    ...d,
+    ma5: ma5Map[d.fecha],
+    ma20: ma20Map[d.fecha],
+  }));
 
   return (
     <main className={styles.main}>
@@ -207,45 +195,12 @@ export default function DetallePage({
             </div>
           )}
           <div className={styles.kpiFecha}>
-            {modoMensual && tipo === 'compras' ? (
-        <ResponsiveContainer width="100%" height={280}>
-          <ComposedChart data={serieMensual} margin={{ top: 8, right: 8, bottom: 40, left: 0 }}>
-            <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-            <XAxis dataKey="label"
-              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
-              tickLine={false} axisLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
-              tickLine={false} axisLine={false} width={50} />
-            <Tooltip
-              contentStyle={{ background: '#13181f', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, fontSize: 13, fontFamily: 'Inter' }}
-              labelStyle={{ color: '#adbac7', marginBottom: 4 }}
-              formatter={(v: number, name: string) => {
-                if (name === 'compras') return [v.toLocaleString('es-AR') + ' MM', 'Comprado'];
-                if (name === 'pctProm') return [v + '%', '% MULC prom.'];
-                return [v, name];
-              }} />
-            <Bar dataKey="compras" fill="var(--green)" fillOpacity={0.8} radius={[3,3,0,0]} />
-            <Line type="monotone" dataKey="pctProm" stroke="#d29922" strokeWidth={1.5}
-              dot={{ r: 3, fill: '#d29922' }} yAxisId="right" />
-            <YAxis yAxisId="right" orientation="right"
-              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
-              tickLine={false} axisLine={false} width={35}
-              tickFormatter={(v: number) => v + '%'} />
-          </ComposedChart>
-        </ResponsiveContainer>
-      ) : (
-      {(() => {
-              const hoy = new Date().toISOString().slice(0, 10);
-              const esHoy = data.fecha === hoy;
-              return esHoy
-                ? `al ${formatFecha(data.fecha)}`
-                : `último dato: ${formatFecha(data.fecha)}`;
-            })()}
+            {data.fecha === hoy ? `al ${formatFecha(data.fecha)}` : `último dato: ${formatFecha(data.fecha)}`}
           </div>
         </div>
       </header>
 
-      {/* Panel MULC — solo para compras */}
+      {/* Panel MULC */}
       {mulcData && (
         <div className={styles.mulcPanel}>
           <div className={styles.mulcKpis}>
@@ -277,20 +232,18 @@ export default function DetallePage({
         </div>
       )}
 
+      {/* Selector de rango */}
       <div className={styles.rangeRow}>
         {RANGOS.map((r, i) => (
-          <button
-            key={r.label}
+          <button key={r.label}
             className={`${styles.rangeBtn} ${!modoCustom && !modoMensual && rangoIdx === i ? styles.active : ''}`}
-            onClick={() => { setRangoIdx(i); setModoCustom(false); setModoMensual(false); }}
-          >
+            onClick={() => { setRangoIdx(i); setModoCustom(false); setModoMensual(false); }}>
             {r.label}
           </button>
         ))}
         <button
           className={`${styles.rangeBtn} ${modoCustom ? styles.active : ''}`}
-          onClick={() => { setModoCustom(true); setModoMensual(false); }}
-        >
+          onClick={() => { setModoCustom(true); setModoMensual(false); }}>
           Custom
         </button>
         {tipo === 'compras' && (
@@ -298,8 +251,7 @@ export default function DetallePage({
             <span className={styles.rangeSep}>|</span>
             <button
               className={`${styles.rangeBtn} ${modoMensual ? styles.active : ''}`}
-              onClick={() => { setModoMensual(true); setModoCustom(false); }}
-            >
+              onClick={() => { setModoMensual(true); setModoCustom(false); }}>
               Mensual
             </button>
           </>
@@ -310,11 +262,11 @@ export default function DetallePage({
         <div className={styles.customRow}>
           <span className={styles.customLabel}>Desde</span>
           <input type="date" className={styles.dateInput} value={customDesde}
-            min="2000-01-01" max={customHasta || new Date().toISOString().slice(0,10)}
+            min="2000-01-01" max={customHasta || hoy}
             onChange={e => setCustomDesde(e.target.value)} />
           <span className={styles.customLabel}>Hasta</span>
           <input type="date" className={styles.dateInput} value={customHasta}
-            min={customDesde || '2000-01-01'} max={new Date().toISOString().slice(0,10)}
+            min={customDesde || '2000-01-01'} max={hoy}
             onChange={e => setCustomHasta(e.target.value)} />
         </div>
       )}
@@ -329,130 +281,111 @@ export default function DetallePage({
             <div className={styles.maToggle}>
               <button
                 className={`${styles.maBtn} ${showMA ? styles.maBtnActive : ''}`}
-                onClick={() => setShowMA(v => !v)}
-              >
+                onClick={() => setShowMA(v => !v)}>
                 {showMA ? 'Ocultar MA' : 'Mostrar MA'}
               </button>
             </div>
           )}
         </div>
-        {modoMensual && tipo === 'compras' ? (
-        <ResponsiveContainer width="100%" height={280}>
-          <ComposedChart data={serieMensual} margin={{ top: 8, right: 8, bottom: 40, left: 0 }}>
-            <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-            <XAxis dataKey="label"
-              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
-              tickLine={false} axisLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
-              tickLine={false} axisLine={false} width={50} />
-            <Tooltip
-              contentStyle={{ background: '#13181f', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, fontSize: 13, fontFamily: 'Inter' }}
-              labelStyle={{ color: '#adbac7', marginBottom: 4 }}
-              formatter={(v: number, name: string) => {
-                if (name === 'compras') return [v.toLocaleString('es-AR') + ' MM', 'Comprado'];
-                if (name === 'pctProm') return [v + '%', '% MULC prom.'];
-                return [v, name];
-              }} />
-            <Bar dataKey="compras" fill="var(--green)" fillOpacity={0.8} radius={[3,3,0,0]} />
-            <Line type="monotone" dataKey="pctProm" stroke="#d29922" strokeWidth={1.5}
-              dot={{ r: 3, fill: '#d29922' }} yAxisId="right" />
-            <YAxis yAxisId="right" orientation="right"
-              tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
-              tickLine={false} axisLine={false} width={35}
-              tickFormatter={(v: number) => v + '%'} />
-          </ComposedChart>
-        </ResponsiveContainer>
-      ) : (
-      {(() => {
-          const ma5 = tipo === 'compras' ? movingAverage(serie, 5) : [];
-          const ma20 = tipo === 'compras' ? movingAverage(serie, 20) : [];
-          const ma5Map = Object.fromEntries(ma5.map(d => [d.fecha, d.valor]));
-          const ma20Map = Object.fromEntries(ma20.map(d => [d.fecha, d.valor]));
-          const serieConMA = serie.map(d => ({
-            ...d,
-            ma5: ma5Map[d.fecha],
-            ma20: ma20Map[d.fecha],
-          }));
-          return (
-            <ResponsiveContainer width="100%" height={280}>
-              <ComposedChart data={tipo === 'compras' ? serieConMA : serie} margin={{ top: 8, right: 8, bottom: 40, left: 0 }}>
-                <defs>
-                  <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={accentColor} stopOpacity={0.18} />
-                    <stop offset="95%" stopColor={accentColor} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-                <XAxis dataKey="fecha"
-                  tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
-                  tickLine={false} axisLine={false}
-                  tickFormatter={(v) => shortDate(v, totalDias)}
-                  interval="preserveStartEnd" angle={-35} textAnchor="end" height={50} />
-                <YAxis tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
-                  tickLine={false} axisLine={false} width={55}
-                  tickFormatter={(v: number) => {
-                    if (Math.abs(v) >= 1000) return (v/1000).toFixed(1) + 'k';
-                    return v.toString();
-                  }} />
-                <Tooltip
-                  contentStyle={{ background: '#13181f', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, fontSize: 13, fontFamily: 'Inter' }}
-                  labelStyle={{ color: '#adbac7', marginBottom: 4 }}
-                  labelFormatter={(v: string) => formatFecha(v)}
-                  formatter={(v: number, name: string) => {
-                    if (name === 'valor') return [formatValor(tipo, v), 'Diario'];
-                    if (name === 'ma5') return [formatValor(tipo, v), 'MA 5'];
-                    if (name === 'ma20') return [formatValor(tipo, v), 'MA 20'];
-                    return [v, name];
-                  }} />
-                <Area type="monotone" dataKey="valor" stroke={accentColor} strokeWidth={1.5}
-                  fill="url(#areaGrad)" dot={false}
-                  activeDot={{ r: 4, fill: accentColor, strokeWidth: 0 }} />
-                {tipo === 'compras' && showMA && (
-                  <Line type="monotone" dataKey="ma5" stroke="#d29922" strokeWidth={1.5}
-                    dot={false} connectNulls={false} strokeDasharray="0" />
-                )}
-                {tipo === 'compras' && showMA && (
-                  <Line type="monotone" dataKey="ma20" stroke="#58a6ff" strokeWidth={1}
-                    dot={false} connectNulls={false} strokeDasharray="4 2" />
-                )}
-              </ComposedChart>
-            </ResponsiveContainer>
-          );
-        })()}
+
+        {modoMensual ? (
+          <ResponsiveContainer width="100%" height={280}>
+            <ComposedChart data={serieMensual} margin={{ top: 8, right: 40, bottom: 20, left: 0 }}>
+              <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+              <XAxis dataKey="label"
+                tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+                tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+                tickLine={false} axisLine={false} width={50} />
+              <YAxis yAxisId="right" orientation="right"
+                tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+                tickLine={false} axisLine={false} width={35}
+                tickFormatter={(v: number) => v + '%'} />
+              <Tooltip
+                contentStyle={{ background: '#13181f', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, fontSize: 13, fontFamily: 'Inter' }}
+                labelStyle={{ color: '#adbac7', marginBottom: 4 }}
+                formatter={(v: number, name: string) => {
+                  if (name === 'compras') return [v.toLocaleString('es-AR') + ' MM', 'Comprado'];
+                  if (name === 'pctProm') return [v + '%', '% MULC prom.'];
+                  return [v, name];
+                }} />
+              <Bar dataKey="compras" fill="var(--green)" fillOpacity={0.8} radius={[3,3,0,0]} />
+              <Line yAxisId="right" type="monotone" dataKey="pctProm"
+                stroke="#d29922" strokeWidth={1.5} dot={{ r: 3, fill: '#d29922' }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        ) : (
+          <ResponsiveContainer width="100%" height={280}>
+            <ComposedChart data={serieConMA} margin={{ top: 8, right: 8, bottom: 40, left: 0 }}>
+              <defs>
+                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={accentColor} stopOpacity={0.18} />
+                  <stop offset="95%" stopColor={accentColor} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+              <XAxis dataKey="fecha"
+                tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+                tickLine={false} axisLine={false}
+                tickFormatter={(v) => shortDate(v, totalDias)}
+                interval="preserveStartEnd" angle={-35} textAnchor="end" height={50} />
+              <YAxis tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+                tickLine={false} axisLine={false} width={55}
+                tickFormatter={(v: number) => {
+                  if (Math.abs(v) >= 1000) return (v/1000).toFixed(1) + 'k';
+                  return v.toString();
+                }} />
+              <Tooltip
+                contentStyle={{ background: '#13181f', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, fontSize: 13, fontFamily: 'Inter' }}
+                labelStyle={{ color: '#adbac7', marginBottom: 4 }}
+                labelFormatter={(v: string) => formatFecha(v)}
+                formatter={(v: number, name: string) => {
+                  if (name === 'valor') return [formatValor(tipo, v), 'Diario'];
+                  if (name === 'ma5') return [formatValor(tipo, v), 'MA 5'];
+                  if (name === 'ma20') return [formatValor(tipo, v), 'MA 20'];
+                  return [v, name];
+                }} />
+              <Area type="monotone" dataKey="valor" stroke={accentColor} strokeWidth={1.5}
+                fill="url(#areaGrad)" dot={false}
+                activeDot={{ r: 4, fill: accentColor, strokeWidth: 0 }} />
+              {tipo === 'compras' && showMA && (
+                <Line type="monotone" dataKey="ma5" stroke="#d29922" strokeWidth={1.5}
+                  dot={false} connectNulls={false} />
+              )}
+              {tipo === 'compras' && showMA && (
+                <Line type="monotone" dataKey="ma20" stroke="#58a6ff" strokeWidth={1}
+                  dot={false} connectNulls={false} strokeDasharray="4 2" />
+              )}
+            </ComposedChart>
+          </ResponsiveContainer>
+        )}
+
+        {tipo === 'compras' && !modoMensual && (
+          <div className={styles.maLegend}>
+            <span style={{ color: 'var(--green)' }}>─── </span>
+            <span style={{ color: '#6e7f8d', fontSize: 11 }}>Diario</span>
+            <span style={{ color: '#d29922', marginLeft: 12 }}>─── </span>
+            <span style={{ color: '#6e7f8d', fontSize: 11 }}>MA 5 ruedas</span>
+            <span style={{ color: '#58a6ff', marginLeft: 12 }}>- - - </span>
+            <span style={{ color: '#6e7f8d', fontSize: 11 }}>MA 20 ruedas</span>
+          </div>
+        )}
+        {tipo === 'compras' && modoMensual && (
+          <div className={styles.maLegend}>
+            <span style={{ color: 'var(--green)' }}>▬ </span>
+            <span style={{ color: '#6e7f8d', fontSize: 11 }}>Compras acumuladas</span>
+            <span style={{ color: '#d29922', marginLeft: 12 }}>─── </span>
+            <span style={{ color: '#6e7f8d', fontSize: 11 }}>% MULC prom. mensual</span>
+          </div>
+        )}
       </div>
 
-      )}
-      {tipo === 'compras' && !modoMensual && (
-        <div className={styles.maLegend}>
-          <span style={{ color: 'var(--green)' }}>─── </span>
-          <span style={{ color: '#6e7f8d', fontSize: 11 }}>Diario</span>
-          <span style={{ color: '#d29922', marginLeft: 12 }}>─── </span>
-          <span style={{ color: '#6e7f8d', fontSize: 11 }}>MA 5 ruedas</span>
-          <span style={{ color: '#58a6ff', marginLeft: 12 }}>─── </span>
-          <span style={{ color: '#6e7f8d', fontSize: 11 }}>MA 20 ruedas</span>
-        </div>
-      )}
-
-      {/* Gráfico % MULC — solo para compras */}
-      {mulcData && seriePctRango.length > 0 && (
+      {/* Gráfico % MULC */}
+      {mulcData && seriePctRango.length > 0 && !modoMensual && (
         <div className={styles.mulcChartWrap}>
           <div className={styles.chartLabel}>Compras BCRA como % del volumen MULC</div>
           <ResponsiveContainer width="100%" height={220}>
             <ComposedChart data={seriePctRango} margin={{ top: 8, right: 8, bottom: 40, left: 0 }}>
-              <defs>
-                <linearGradient id="bandaMarginal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6e7f8d" stopOpacity={0.06} />
-                </linearGradient>
-                <linearGradient id="bandaRelevante" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2ea043" stopOpacity={0.07} />
-                </linearGradient>
-                <linearGradient id="bandaDominante" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#d29922" stopOpacity={0.08} />
-                </linearGradient>
-                <linearGradient id="bandaFuerte" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f85149" stopOpacity={0.1} />
-                </linearGradient>
-              </defs>
               <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
               <XAxis dataKey="fecha"
                 tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
@@ -469,21 +402,17 @@ export default function DetallePage({
                 labelFormatter={(v: string) => formatFecha(v)}
                 formatter={(v: number, name: string) => {
                   if (name === 'valor') return [v + '%', '% MULC'];
-                  if (name === 'ma20pct') return [v + '%', 'MA 20'];
                   return [v, name];
                 }} />
-              {/* Bandas de interpretación */}
               <ReferenceLine y={10} stroke="rgba(110,127,141,0.3)" strokeDasharray="2 4" />
               <ReferenceLine y={25} stroke="rgba(46,160,67,0.3)" strokeDasharray="2 4" />
               <ReferenceLine y={50} stroke="rgba(210,153,34,0.3)" strokeDasharray="2 4" />
-              {/* Labels de bandas */}
               <ReferenceLine y={5} stroke="transparent"
                 label={{ value: 'Marginal', position: 'insideTopRight', fontSize: 9, fill: 'rgba(110,127,141,0.5)' }} />
               <ReferenceLine y={17} stroke="transparent"
                 label={{ value: 'Relevante', position: 'insideTopRight', fontSize: 9, fill: 'rgba(46,160,67,0.4)' }} />
               <ReferenceLine y={37} stroke="transparent"
                 label={{ value: 'Dominante', position: 'insideTopRight', fontSize: 9, fill: 'rgba(210,153,34,0.4)' }} />
-              {/* MA 20 punteada */}
               <ReferenceLine y={mulcData.pctPromedio5} stroke="#d29922" strokeDasharray="4 4" strokeOpacity={0.7} />
               <Line type="monotone" dataKey="valor" stroke="var(--green)" strokeWidth={2}
                 dot={false} connectNulls={false} />
