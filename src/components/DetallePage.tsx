@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {
   ResponsiveContainer, AreaChart, Area,
   ComposedChart, BarChart, Bar, Line,
+  ScatterChart, Scatter, ZAxis,
   XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine,
 } from 'recharts';
 import { useState, useMemo } from 'react';
@@ -80,6 +81,103 @@ interface Props {
   tipo: IndicadorTipo;
   back: string;
   mulcData?: MulcData;
+}
+
+function ScatterAnalisis({ data, seriePct, accentColor }: {
+  data: DataPoint[];
+  seriePct: DataPoint[];
+  accentColor: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const scatterData = useMemo(() => {
+    const mulcMap = Object.fromEntries(seriePct.map(d => [d.fecha, d]));
+    return data
+      .filter(d => mulcMap[d.fecha])
+      .map(d => {
+        const pct = mulcMap[d.fecha].valor;
+        const vol = pct > 0 ? Math.round(d.valor / pct * 100) : 0;
+        return { fecha: d.fecha, compras: d.valor, vol, pct };
+      })
+      .filter(d => d.vol > 0);
+  }, [data, seriePct]);
+
+  if (!open) {
+    return (
+      <div style={{ marginBottom: '1.5rem' }}>
+        <button
+          onClick={() => setOpen(true)}
+          style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: 12,
+            color: 'var(--text-tertiary)',
+            background: 'none',
+            border: '1px solid var(--border)',
+            borderRadius: 8,
+            padding: '6px 14px',
+            cursor: 'pointer',
+            transition: 'all 0.12s',
+          }}
+        >
+          ＋ Ver análisis avanzado
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="scatterWrap" style={{ marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-tertiary)' }}>
+          Scatter: Compras BCRA vs Volumen MULC
+        </div>
+        <button
+          onClick={() => setOpen(false)}
+          style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: 'var(--text-tertiary)', background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          Ocultar ▲
+        </button>
+      </div>
+      <ResponsiveContainer width="100%" height={260}>
+        <ScatterChart margin={{ top: 8, right: 8, bottom: 30, left: 0 }}>
+          <CartesianGrid stroke="rgba(255,255,255,0.06)" />
+          <XAxis
+            dataKey="vol" type="number" name="Vol. MULC"
+            tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+            tickLine={false} axisLine={false}
+            tickFormatter={(v: number) => v + ' MM'}
+            label={{ value: 'Volumen MULC (MM)', position: 'insideBottom', offset: -15, fontSize: 11, fill: '#6e7f8d' }}
+          />
+          <YAxis
+            dataKey="compras" type="number" name="Compras BCRA"
+            tick={{ fontSize: 11, fill: '#6e7f8d', fontFamily: 'Inter' }}
+            tickLine={false} axisLine={false} width={50}
+            tickFormatter={(v: number) => v + ' MM'}
+          />
+          <ZAxis range={[40, 40]} />
+          <Tooltip
+            contentStyle={{ background: '#13181f', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, fontSize: 12, fontFamily: 'Inter' }}
+            formatter={(v: number, name: string) => {
+              if (name === 'Vol. MULC') return [v + ' MM', 'Vol. MULC'];
+              if (name === 'Compras BCRA') return [v + ' MM', 'Compras BCRA'];
+              return [v, name];
+            }}
+            labelFormatter={(_, payload) => {
+              if (payload && payload[0]) {
+                const d = payload[0].payload;
+                return `${d.fecha} · ${d.pct}% MULC`;
+              }
+              return '';
+            }}
+          />
+          <Scatter data={scatterData} fill={accentColor} fillOpacity={0.7} />
+        </ScatterChart>
+      </ResponsiveContainer>
+      <div style={{ fontSize: 11, color: 'var(--text-tertiary)', textAlign: 'center', marginTop: 4 }}>
+        Cada punto = una rueda · {scatterData.length} días disponibles
+      </div>
+    </div>
+  );
 }
 
 export default function DetallePage({
@@ -223,14 +321,14 @@ export default function DetallePage({
               </div>
             </div>
             <div className={styles.mulcKpi}>
-              <div className={styles.mulcKpiLabel}>% prom. 5 ruedas</div>
-              <div className={styles.mulcKpiValue}>{mulcData.pctPromedio5}%</div>
-            </div>
-            <div className={styles.mulcKpi}>
               <div className={styles.mulcKpiLabel}>Acum. 2026</div>
               <div className={styles.mulcKpiValue} style={{ color: 'var(--green)' }}>
                 +{Math.round(mulcData.acumAnio).toLocaleString('es-AR')} MM
               </div>
+            </div>
+            <div className={styles.mulcKpi}>
+              <div className={styles.mulcKpiLabel}>% prom. 5 ruedas</div>
+              <div className={styles.mulcKpiValue}>{mulcData.pctPromedio5}%</div>
             </div>
           </div>
         </div>
@@ -429,6 +527,11 @@ export default function DetallePage({
             <span style={{ color: '#6e7f8d', fontSize: 11 }}>Prom. 5 ruedas: {mulcData.pctPromedio5}%</span>
           </div>
         </div>
+      )}
+
+      {/* Análisis avanzado — Scatter */}
+      {mulcData && !modoMensual && (
+        <ScatterAnalisis data={data.serie} seriePct={mulcData.seriePct} accentColor={accentColor} />
       )}
 
       {hitosEnRango.length > 0 && (
