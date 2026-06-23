@@ -164,7 +164,7 @@ function ScatterAnalisis({ data, seriePct, accentColor }: {
           <Tooltip
             contentStyle={{ background: '#13181f', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, fontSize: 12, fontFamily: 'Inter' }}
             labelStyle={{ color: '#adbac7', marginBottom: 4 }}
-            itemStyle={{ color: '#2ea043' }}
+            itemStyle={{ color: '#adbac7' }}
             formatter={(v: number, name: string) => {
               if (name === 'Vol. MULC') return [v + ' MM', 'Vol. MULC'];
               if (name === 'Compras BCRA') return [v + ' MM', 'Compras BCRA'];
