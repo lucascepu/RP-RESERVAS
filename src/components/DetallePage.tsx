@@ -113,6 +113,25 @@ export default function DetallePage({
     return { serie, hitosEnRango, totalDias: dias };
   }, [rangoIdx, modoCustom, customDesde, customHasta, data.serie, hitos]);
 
+  // KPI mensual para compras
+  const kpiMensual = useMemo(() => {
+    if (!mulcData) return null;
+    const hoy = new Date();
+    const inicioMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
+    const serieMes = data.serie.filter(d => d.fecha >= inicioMes);
+    const compradoMes = serieMes.reduce((sum, d) => sum + d.valor, 0);
+    const diasMes = serieMes.length;
+    const promDiario = diasMes > 0 ? Math.round(compradoMes / diasMes * 10) / 10 : 0;
+    const pctsMes = serieMes
+      .filter(d => mulcData.seriePct.find(p => p.fecha === d.fecha))
+      .map(d => mulcData.seriePct.find(p => p.fecha === d.fecha)!.valor);
+    const pctPromMes = pctsMes.length > 0
+      ? Math.round(pctsMes.reduce((s, p) => s + p, 0) / pctsMes.length * 10) / 10
+      : 0;
+    const mesNombre = hoy.toLocaleString('es-AR', { month: 'long' });
+    return { compradoMes: Math.round(compradoMes), diasMes, promDiario, pctPromMes, mesNombre };
+  }, [data.serie, mulcData]);
+
   const sube = data.variacion >= 0;
   const invertLogic = INVERT_LOGIC.includes(tipo);
   const esBueno = invertLogic ? !sube : sube;
