@@ -128,8 +128,8 @@ function ScatterAnalisis({ data, seriePct, accentColor }: {
   return (
     <div style={{
       marginBottom: '1.5rem',
-      background: '#1c2333',
-      border: '1px solid rgba(255,255,255,0.18)',
+      background: 'var(--bg-card)',
+      border: '1px solid var(--border)',
       borderRadius: 12,
       padding: '1.25rem',
     }}>
@@ -162,16 +162,9 @@ function ScatterAnalisis({ data, seriePct, accentColor }: {
           />
           <ZAxis range={[40, 40]} />
           <Tooltip
-            contentStyle={{
-              background: '#ffffff',
-              border: '1px solid #e0e0e0',
-              borderRadius: 8,
-              fontSize: 12,
-              fontFamily: 'Inter',
-              color: '#111',
-            }}
-            labelStyle={{ color: '#333', fontWeight: 600, marginBottom: 4 }}
-            itemStyle={{ color: '#333' }}
+            contentStyle={{ background: '#13181f', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, fontSize: 12, fontFamily: 'Inter' }}
+            labelStyle={{ color: '#adbac7', marginBottom: 4 }}
+            itemStyle={{ color: '#2ea043' }}
             formatter={(v: number, name: string) => {
               if (name === 'Vol. MULC') return [v + ' MM', 'Vol. MULC'];
               if (name === 'Compras BCRA') return [v + ' MM', 'Compras BCRA'];
