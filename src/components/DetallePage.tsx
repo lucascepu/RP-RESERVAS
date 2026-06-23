@@ -126,8 +126,14 @@ function ScatterAnalisis({ data, seriePct, accentColor }: {
   }
 
   return (
-    <div className="scatterWrap" style={{ marginBottom: '1.5rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+    <div style={{
+      marginBottom: '1.5rem',
+      background: 'var(--bg-card)',
+      border: '1px solid var(--border)',
+      borderRadius: 12,
+      padding: '1.25rem',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-tertiary)' }}>
           Scatter: Compras BCRA vs Volumen MULC
         </div>
