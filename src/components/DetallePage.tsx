@@ -215,8 +215,11 @@ export default function DetallePage({
               <div className={styles.mulcKpiValue}>{mulcData.volHoy.toLocaleString('es-AR')} MM</div>
             </div>
             <div className={styles.mulcKpi}>
-              <div className={styles.mulcKpiLabel}>Últ. 5 ruedas</div>
-              <div className={styles.mulcKpiValue}>+{mulcData.acum5ruedas.toLocaleString('es-AR')} MM</div>
+              <div className={styles.mulcKpiLabel}>Prom. 5 ruedas</div>
+              <div className={styles.mulcKpiValue}>{mulcData.prom5ruedas.toLocaleString('es-AR')} MM/día</div>
+              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>
+                Acum: +{mulcData.acum5ruedas.toLocaleString('es-AR')} MM
+              </div>
             </div>
             <div className={styles.mulcKpi}>
               <div className={styles.mulcKpiLabel}>% prom. 5 ruedas</div>
