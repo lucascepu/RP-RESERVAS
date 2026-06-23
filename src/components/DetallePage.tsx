@@ -45,6 +45,8 @@ function formatValor(tipo: IndicadorTipo, v: number): string {
   return (v >= 0 ? '+' : '') + v.toLocaleString('es-AR') + ' MM';
 }
 
+type DataPoint = { fecha: string; valor: number };
+
 function movingAverage(data: DataPoint[], n: number): DataPoint[] {
   return data.map((d, i) => {
     if (i < n - 1) return { fecha: d.fecha, valor: NaN };
