@@ -20,6 +20,7 @@ interface MulcData {
   pctHoy: number;
   volHoy: number;
   acum5ruedas: number;
+  prom5ruedas: number;
   pctPromedio5: number;
   acumAnio: number;
   seriePct: DataPoint[];
