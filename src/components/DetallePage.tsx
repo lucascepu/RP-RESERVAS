@@ -128,8 +128,8 @@ function ScatterAnalisis({ data, seriePct, accentColor }: {
   return (
     <div style={{
       marginBottom: '1.5rem',
-      background: 'var(--bg-card)',
-      border: '1px solid var(--border)',
+      background: '#1c2333',
+      border: '1px solid rgba(255,255,255,0.18)',
       borderRadius: 12,
       padding: '1.25rem',
     }}>
