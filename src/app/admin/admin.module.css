@@ -1,3 +1,30 @@
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 14px;
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition: color 0.12s;
+}
+
+.tab:hover { color: var(--text-secondary); }
+
+.tabActivo {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
 .main {
   min-height: 100vh;
   display: flex;

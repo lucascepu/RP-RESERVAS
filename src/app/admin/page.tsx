@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './admin.module.css';
 
 export default function AdminPage() {
+  const router = useRouter();
   const hoy = new Date().toISOString().slice(0, 10);
   const [pin, setPin] = useState('');
   const [autenticado, setAutenticado] = useState(false);
@@ -157,6 +159,12 @@ export default function AdminPage() {
   return (
     <main className={styles.main}>
       <div className={styles.wrapper}>
+
+        {/* Tabs */}
+        <div className={styles.tabs}>
+          <button className={`${styles.tab} ${styles.tabActivo}`}>Carga</button>
+          <button className={styles.tab} onClick={() => router.push('/export')}>Exportar</button>
+        </div>
 
         {/* Fecha global — arriba, ancho completo */}
         <div className={styles.fechaGlobal}>
