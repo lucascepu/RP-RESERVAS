@@ -281,6 +281,9 @@ export default function AdminPage() {
                 Último: <strong>{mulcUltimo.f}</strong> → {mulcUltimo.v.toLocaleString('es-AR')} MM
               </div>
             )}
+            <div className={styles.fuenteHint}>
+              MAE Mayorista: <strong>USMEP + UST$T + USB$T</strong>
+            </div>
             <div className={styles.field}>
               <label>Volumen operado (USD MM)</label>
               <input

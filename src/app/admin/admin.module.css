@@ -216,3 +216,13 @@
 
 .ok { font-size: 13px; color: var(--green); text-align: center; margin-top: 10px; }
 .error { font-size: 13px; color: var(--red); text-align: center; margin-top: 8px; }
+
+.fuenteHint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-bottom: 0.875rem;
+}
+
+.fuenteHint strong {
+  color: var(--text-secondary);
+}
