@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 
 const PIN = '1245';
 const GH_TOKEN = process.env.GH_TOKEN!;
@@ -45,6 +46,10 @@ export async function POST(req: NextRequest) {
   }
 
   await ghPush(data, sha, `data: riesgo pais ${fecha} = ${valor} pbs`);
+  revalidatePath('/');
+  revalidatePath('/compras');
+  revalidatePath('/reservas');
+  revalidatePath('/riesgo-pais');
   return NextResponse.json({ ok: true, ultimo: data[data.length - 1] });
 }
 

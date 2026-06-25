@@ -21,13 +21,32 @@
   height: 3px;
 }
 
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
 .label {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text-tertiary);
-  margin-bottom: 12px;
   font-family: 'Inter', sans-serif;
+  margin-bottom: 0;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  background: rgba(120,174,222,0.15);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 2px 6px;
+  letter-spacing: 0.05em;
 }
 
 .valueRow {
@@ -35,7 +54,7 @@
   align-items: baseline;
   gap: 8px;
   margin-bottom: 5px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .value {
@@ -77,8 +96,11 @@
 
 .subInfo2 {
   font-size: 12px;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   margin-top: 5px;
-  line-height: 1.6;
+  line-height: 1.5;
   font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
