@@ -32,6 +32,7 @@ export interface ComprasSummary {
   pctMulcHoy: number;
   volMulcHoy: number;
   acum5ruedas: number;
+  vol5ruedas: number;
   prom5ruedas: number;
   pctPromedio5ruedas: number;
   serieCompras: DataPoint[];
@@ -176,6 +177,7 @@ export async function getCompras(): Promise<ComprasSummary> {
   // Últimas 5 ruedas
   const ultimas5 = serie.slice(-5);
   const acum5ruedas = ultimas5.reduce((sum, d) => sum + d.valor, 0);
+  const vol5ruedas = ultimas5.reduce((sum, d) => sum + (mulcDict[d.fecha] ?? 0), 0);
   const pctPromedio5ruedas = ultimas5.reduce((sum, d) => {
     const mulcVol = mulcDict[d.fecha] ?? 0;
     return sum + (mulcVol > 0 ? d.valor / mulcVol * 100 : 0);
@@ -199,6 +201,7 @@ export async function getCompras(): Promise<ComprasSummary> {
     pctMulcHoy,
     volMulcHoy,
     acum5ruedas: Math.round(acum5ruedas * 10) / 10,
+    vol5ruedas: Math.round(vol5ruedas * 10) / 10,
     prom5ruedas,
     pctPromedio5ruedas: Math.round(pctPromedio5ruedas * 10) / 10,
     serieCompras: serie,

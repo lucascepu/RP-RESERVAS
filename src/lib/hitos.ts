@@ -42,6 +42,8 @@ export const HITOS: Hito[] = [
     fuente: 'BCRA',
     automatico: false,
   },
+  {
+    id: 'bcra-meta-2026',
     fecha: '2026-06-10',
     titulo: 'BCRA supera meta anual de acumulación de reservas',
     descripcion: 'Las compras netas acumuladas en 2026 alcanzan los USD 10.419 MM, superando el piso de la meta anual fijada en USD 10.000 MM.',
