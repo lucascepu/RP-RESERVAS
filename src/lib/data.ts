@@ -148,7 +148,7 @@ export async function getCompras(): Promise<ComprasSummary> {
       hoy: 0, fechaHoy: toISO(new Date()),
       acumMes: 0, acumAnio: 0,
       pctMulcHoy: 0, volMulcHoy: 0,
-      acum5ruedas: 0, prom5ruedas: 0, pctPromedio5ruedas: 0,
+      acum5ruedas: 0, vol5ruedas: 0, prom5ruedas: 0, pctPromedio5ruedas: 0,
       serieCompras: [], seriePct: [],
     };
   }
