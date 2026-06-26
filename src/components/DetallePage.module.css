@@ -199,7 +199,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 1.25rem;
+  padding: 0.875rem 1.25rem;
   margin-bottom: 1.25rem;
 }
 
@@ -212,7 +212,7 @@
 
 .mulcKpi {
   width: 100%;
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 1rem;
   border-right: 1px solid var(--border);
   text-align: center;
 }
@@ -225,7 +225,7 @@
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--text-tertiary);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .mulcKpiValue {
