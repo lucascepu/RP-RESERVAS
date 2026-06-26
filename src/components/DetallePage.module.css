@@ -349,3 +349,60 @@
   padding: 0 2px;
   user-select: none;
 }
+
+/* ── Mobile responsive ── */
+@media (max-width: 600px) {
+  .main {
+    padding: 1.25rem 1rem 3rem;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.25rem;
+  }
+
+  .titulo {
+    font-size: 20px;
+  }
+
+  .kpiBox {
+    text-align: left;
+  }
+
+  .kpiValue {
+    font-size: 22px;
+  }
+
+  /* KPIs panel: 2x2 en mobile */
+  .mulcKpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .mulcKpi {
+    padding: 0.5rem 0.75rem;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+
+  /* Bordes 2x2: quitar bottom de últimas 2 */
+  .mulcKpi:nth-child(3),
+  .mulcKpi:nth-child(4) {
+    border-bottom: none;
+  }
+
+  /* Separador vertical entre columnas */
+  .mulcKpi:nth-child(odd) {
+    border-right: 1px solid var(--border);
+  }
+
+  .mulcKpiValue {
+    font-size: 16px;
+  }
+
+  .mulcPanel {
+    padding: 0.75rem 1rem;
+  }
+}
