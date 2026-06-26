@@ -33,6 +33,7 @@ export interface ComprasSummary {
   volMulcHoy: number;
   acum5ruedas: number;
   vol5ruedas: number;
+  pctAcum5ruedas: number;
   prom5ruedas: number;
   pctPromedio5ruedas: number;
   serieCompras: DataPoint[];
@@ -148,7 +149,7 @@ export async function getCompras(): Promise<ComprasSummary> {
       hoy: 0, fechaHoy: toISO(new Date()),
       acumMes: 0, acumAnio: 0,
       pctMulcHoy: 0, volMulcHoy: 0,
-      acum5ruedas: 0, vol5ruedas: 0, prom5ruedas: 0, pctPromedio5ruedas: 0,
+      acum5ruedas: 0, vol5ruedas: 0, pctAcum5ruedas: 0, prom5ruedas: 0, pctPromedio5ruedas: 0,
       serieCompras: [], seriePct: [],
     };
   }
@@ -192,6 +193,7 @@ export async function getCompras(): Promise<ComprasSummary> {
     }));
 
   const prom5ruedas = Math.round(acum5ruedas / ultimas5.length * 10) / 10;
+  const pctAcum5ruedas = vol5ruedas > 0 ? Math.round(acum5ruedas / vol5ruedas * 1000) / 10 : 0;
 
   return {
     hoy: compraDiaria,
@@ -202,6 +204,7 @@ export async function getCompras(): Promise<ComprasSummary> {
     volMulcHoy,
     acum5ruedas: Math.round(acum5ruedas * 10) / 10,
     vol5ruedas: Math.round(vol5ruedas * 10) / 10,
+    pctAcum5ruedas,
     prom5ruedas,
     pctPromedio5ruedas: Math.round(pctPromedio5ruedas * 10) / 10,
     serieCompras: serie,

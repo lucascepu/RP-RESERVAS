@@ -79,7 +79,7 @@ export default async function Home() {
             accentColor="var(--green)"
             hideVariacion={true}
             subInfo={`${compData.pctMulcHoy}% del MULC · Vol: ${compData.volMulcHoy.toLocaleString('es-AR')} MM`}
-            subInfo2={`Últ. 5 ruedas: +${compData.acum5ruedas.toLocaleString('es-AR')} MM · Vol: ${compData.vol5ruedas.toLocaleString('es-AR')} MM\nAcum. 2026: +${Math.round(compData.acumAnio).toLocaleString('es-AR')} MM`}
+            subInfo2={`Últ. 5 ruedas: +${compData.acum5ruedas.toLocaleString('es-AR')} MM · Vol: ${compData.vol5ruedas.toLocaleString('es-AR')} MM · ${compData.pctAcum5ruedas}%\nAcum. 2026: +${Math.round(compData.acumAnio).toLocaleString('es-AR')} MM`}
           />
         ) : <CardError label="Compras BCRA" />}
       </section>
