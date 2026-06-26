@@ -323,22 +323,13 @@ export default function DetallePage({
               <div className={styles.mulcKpiValue}>{mulcData.volHoy.toLocaleString('es-AR')} MM</div>
             </div>
             <div className={styles.mulcKpi}>
-              <div className={styles.mulcKpiLabel}>Compras últ. 5 ruedas</div>
+              <div className={styles.mulcKpiLabel}>Últ. 5 ruedas</div>
               <div className={styles.mulcKpiValue} style={{ color: 'var(--green)' }}>
                 +{mulcData.acum5ruedas.toLocaleString('es-AR')} MM
               </div>
-            </div>
-            <div className={styles.mulcKpi}>
-              <div className={styles.mulcKpiLabel}>Vol. MULC últ. 5 ruedas</div>
-              <div className={styles.mulcKpiValue}>{mulcData.vol5ruedas.toLocaleString('es-AR')} MM</div>
-            </div>
-            <div className={styles.mulcKpi}>
-              <div className={styles.mulcKpiLabel}>Prom. compras 5 ruedas</div>
-              <div className={styles.mulcKpiValue}>{mulcData.prom5ruedas.toLocaleString('es-AR')} MM/día</div>
-            </div>
-            <div className={styles.mulcKpi}>
-              <div className={styles.mulcKpiLabel}>% prom. 5 ruedas</div>
-              <div className={styles.mulcKpiValue}>{mulcData.pctPromedio5}%</div>
+              <div className={styles.mulcKpiSub}>
+                Vol: {mulcData.vol5ruedas.toLocaleString('es-AR')} MM · {mulcData.pctPromedio5}%
+              </div>
             </div>
             <div className={styles.mulcKpi}>
               <div className={styles.mulcKpiLabel}>Acum. 2026</div>

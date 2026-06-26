@@ -204,19 +204,20 @@
 }
 
 .mulcKpis {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 0;
-  flex-wrap: wrap;
+  justify-items: center;
 }
 
 .mulcKpi {
-  flex: 1;
-  min-width: 120px;
-  padding: 0 1rem;
+  width: 100%;
+  padding: 0.5rem 1rem;
   border-right: 1px solid var(--border);
+  text-align: center;
 }
 
-.mulcKpi:first-child { padding-left: 0; }
+.mulcKpi:first-child { padding-left: 1rem; }
 .mulcKpi:last-child { border-right: none; }
 
 .mulcKpiLabel {
@@ -231,6 +232,13 @@
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.mulcKpiSub {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
   font-variant-numeric: tabular-nums;
 }
 
