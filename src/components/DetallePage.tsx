@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import type { RegimenEstado } from '@/lib/data';
+import RegimenPanel from './RegimenPanel';
 import {
   ResponsiveContainer, AreaChart, Area,
   ComposedChart, BarChart, Bar, Line,
@@ -82,6 +84,7 @@ interface Props {
   tipo: IndicadorTipo;
   back: string;
   mulcData?: MulcData;
+  regimen?: RegimenEstado;
 }
 
 function ScatterAnalisis({ data, seriePct, accentColor }: {
@@ -190,7 +193,7 @@ function ScatterAnalisis({ data, seriePct, accentColor }: {
 }
 
 export default function DetallePage({
-  titulo, subtitulo, data, hitos, accentColor, tipo, back, mulcData,
+  titulo, subtitulo, data, hitos, accentColor, tipo, back, mulcData, regimen,
 }: Props) {
   const hoy = new Date().toISOString().slice(0, 10);
   const [rangoIdx, setRangoIdx] = useState(2);
@@ -309,6 +312,8 @@ export default function DetallePage({
       </header>
 
       {/* Panel MULC */}
+      {regimen && <RegimenPanel estado={regimen} />}
+
       {mulcData && (
         <div className={styles.mulcPanel}>
           <div className={styles.mulcKpis}>

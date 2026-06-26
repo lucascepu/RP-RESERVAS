@@ -1,4 +1,4 @@
-import { getCompras } from '@/lib/data';
+import { getCompras, calcularRegimen } from '@/lib/data';
 import type { IndicadorSummary } from '@/lib/data';
 import { HITOS } from '@/lib/hitos';
 import DetallePage from '@/components/DetallePage';
@@ -22,6 +22,8 @@ export default async function ComprasPage() {
     serie: data.serieCompras,
   };
 
+  const regimen = calcularRegimen(data);
+
   return (
     <DetallePage
       titulo="Compras de Divisas BCRA"
@@ -41,6 +43,7 @@ export default async function ComprasPage() {
         acumAnio: data.acumAnio,
         seriePct: data.seriePct,
       }}
+      regimen={regimen}
     />
   );
 }

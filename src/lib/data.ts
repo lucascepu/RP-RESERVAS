@@ -211,3 +211,100 @@ export async function getCompras(): Promise<ComprasSummary> {
     seriePct,
   };
 }
+
+// ── Panel Estado del Régimen Cambiario ──────────────────────────────────────
+
+export interface RegimenSignal {
+  label: string;
+  valor: string;
+  descripcion: string;
+  color: 'green' | 'yellow' | 'red' | 'neutral';
+}
+
+export interface RegimenEstado {
+  signals: RegimenSignal[];
+  resumen: string;
+  tono: 'comprador' | 'moderado' | 'cauteloso' | 'vendedor';
+}
+
+export function calcularRegimen(compras: ComprasSummary): RegimenEstado {
+  const PROM_ANUAL_PCT  = 20.7;  // % MULC promedio 2026
+  const PROM_ANUAL_MM   = 94.8;  // MM/día promedio 2026
+  const signals: RegimenSignal[] = [];
+
+  // — Señal 1: Compra diaria —
+  const hoy = compras.hoy;
+  let s1: RegimenSignal;
+  if (hoy < 0) {
+    s1 = { label: 'Compra diaria', valor: `${hoy} MM`, descripcion: 'Vendió divisas en el día', color: 'red' };
+  } else if (hoy <= 25) {
+    s1 = { label: 'Compra diaria', valor: `+${hoy} MM`, descripcion: 'Intervención mínima', color: 'neutral' };
+  } else if (hoy <= 75) {
+    s1 = { label: 'Compra diaria', valor: `+${hoy} MM`, descripcion: 'Compra moderada', color: 'yellow' };
+  } else if (hoy <= 150) {
+    s1 = { label: 'Compra diaria', valor: `+${hoy} MM`, descripcion: 'Compra elevada', color: 'green' };
+  } else {
+    s1 = { label: 'Compra diaria', valor: `+${hoy} MM`, descripcion: 'Compra muy elevada', color: 'green' };
+  }
+  signals.push(s1);
+
+  // — Señal 2: Participación MULC —
+  const pct = compras.pctMulcHoy;
+  const diffPct = pct - PROM_ANUAL_PCT;
+  const diffPctStr = diffPct >= 0 ? `+${diffPct.toFixed(1)}pp vs promedio anual` : `${diffPct.toFixed(1)}pp vs promedio anual`;
+  let s2: RegimenSignal;
+  if (pct < 10) {
+    s2 = { label: 'Participación MULC', valor: `${pct}%`, descripcion: `Baja · ${diffPctStr}`, color: 'neutral' };
+  } else if (pct <= 20) {
+    s2 = { label: 'Participación MULC', valor: `${pct}%`, descripcion: `Normal · ${diffPctStr}`, color: 'yellow' };
+  } else {
+    s2 = { label: 'Participación MULC', valor: `${pct}%`, descripcion: `Elevada · ${diffPctStr}`, color: 'green' };
+  }
+  signals.push(s2);
+
+  // — Señal 3: Últimas 5 ruedas vs promedio anual —
+  const prom5 = compras.prom5ruedas;
+  const diff5 = ((prom5 - PROM_ANUAL_MM) / PROM_ANUAL_MM) * 100;
+  const diff5Str = diff5 >= 0 ? `+${diff5.toFixed(0)}% vs promedio anual` : `${diff5.toFixed(0)}% vs promedio anual`;
+  let s3: RegimenSignal;
+  if (diff5 > 20) {
+    s3 = { label: 'Ritmo últ. 5 ruedas', valor: `${prom5} MM/día`, descripcion: `Acelerado · ${diff5Str}`, color: 'green' };
+  } else if (diff5 >= -20) {
+    s3 = { label: 'Ritmo últ. 5 ruedas', valor: `${prom5} MM/día`, descripcion: `En línea · ${diff5Str}`, color: 'yellow' };
+  } else {
+    s3 = { label: 'Ritmo últ. 5 ruedas', valor: `${prom5} MM/día`, descripcion: `Desacelerado · ${diff5Str}`, color: 'neutral' };
+  }
+  signals.push(s3);
+
+  // — Señal 4: Acumulado 2026 —
+  const acum = Math.round(compras.acumAnio);
+  const pctAnual = compras.pctAcum5ruedas; // reutilizo el % acum general
+  signals.push({
+    label: 'Acumulado 2026',
+    valor: `+${acum.toLocaleString('es-AR')} MM`,
+    descripcion: `${compras.pctPromedio5ruedas}% promedio MULC en el año`,
+    color: 'neutral',
+  });
+
+  // — Tono general —
+  const greens = signals.filter(s => s.color === 'green').length;
+  const reds   = signals.filter(s => s.color === 'red').length;
+  let tono: RegimenEstado['tono'];
+  let resumen: string;
+
+  if (reds > 0) {
+    tono = 'vendedor';
+    resumen = 'El BCRA vendió divisas. Posible presión sobre el tipo de cambio.';
+  } else if (greens >= 2) {
+    tono = 'comprador';
+    resumen = 'Régimen comprador activo. Intervención por encima del promedio anual.';
+  } else if (greens === 1) {
+    tono = 'moderado';
+    resumen = 'Intervención moderada. En línea con el ritmo promedio del año.';
+  } else {
+    tono = 'cauteloso';
+    resumen = 'Actividad baja. El BCRA redujo su participación en el MULC.';
+  }
+
+  return { signals, resumen, tono };
+}
