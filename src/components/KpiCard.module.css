@@ -98,9 +98,7 @@
   font-size: 12px;
   color: var(--text-secondary);
   margin-top: 5px;
-  line-height: 1.5;
+  line-height: 1.6;
   font-family: 'Inter', sans-serif;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: pre-line;
 }
