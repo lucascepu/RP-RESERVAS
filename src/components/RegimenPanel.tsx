@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import type { RegimenEstado } from '@/lib/data';
 import styles from './RegimenPanel.module.css';
 
@@ -18,34 +19,41 @@ const COLOR_DOT: Record<string, string> = {
 };
 
 export default function RegimenPanel({ estado }: { estado: RegimenEstado }) {
+  const [abierto, setAbierto] = useState(false);
   const tono = TONO_CONFIG[estado.tono];
 
   return (
     <div className={styles.panel}>
-      <div className={styles.header}>
-        <div className={styles.titulo}>Estado del régimen cambiario</div>
-        <div className={`${styles.tono} ${styles[tono.cls]}`}>
-          <span className={styles.tonoIcon}>{tono.icon}</span>
-          {tono.label}
-        </div>
-      </div>
-
-      <div className={styles.resumen}>{estado.resumen}</div>
-
-      <div className={styles.signals}>
-        {estado.signals.map((s, i) => (
-          <div key={i} className={styles.signal}>
-            <div className={styles.signalDot} style={{ background: COLOR_DOT[s.color] }} />
-            <div className={styles.signalContent}>
-              <div className={styles.signalLabel}>{s.label}</div>
-              <div className={styles.signalValor} style={{ color: COLOR_DOT[s.color] }}>
-                {s.valor}
-              </div>
-              <div className={styles.signalDesc}>{s.descripcion}</div>
-            </div>
+      <button className={styles.header} onClick={() => setAbierto(a => !a)}>
+        <div className={styles.headerLeft}>
+          <span className={styles.titulo}>Estado del régimen cambiario</span>
+          <div className={`${styles.tono} ${styles[tono.cls]}`}>
+            <span className={styles.tonoIcon}>{tono.icon}</span>
+            {tono.label}
           </div>
-        ))}
-      </div>
+        </div>
+        <span className={`${styles.chevron} ${abierto ? styles.chevronOpen : ''}`}>›</span>
+      </button>
+
+      {abierto && (
+        <>
+          <div className={styles.resumen}>{estado.resumen}</div>
+          <div className={styles.signals}>
+            {estado.signals.map((s, i) => (
+              <div key={i} className={styles.signal}>
+                <div className={styles.signalDot} style={{ background: COLOR_DOT[s.color] }} />
+                <div className={styles.signalContent}>
+                  <div className={styles.signalLabel}>{s.label}</div>
+                  <div className={styles.signalValor} style={{ color: COLOR_DOT[s.color] }}>
+                    {s.valor}
+                  </div>
+                  <div className={styles.signalDesc}>{s.descripcion}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

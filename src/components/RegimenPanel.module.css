@@ -7,6 +7,12 @@
 }
 
 .header {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -40,6 +46,27 @@
 .tonoYellow  { background: rgba(210,153,34,0.12); color: #d29922;      border: 1px solid rgba(210,153,34,0.3); }
 .tonoNeutral { background: rgba(110,127,141,0.12);color: var(--text-secondary); border: 1px solid var(--border); }
 .tonoRed     { background: rgba(248,81,73,0.12);  color: var(--red);   border: 1px solid rgba(248,81,73,0.3); }
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.chevron {
+  font-size: 18px;
+  color: var(--text-tertiary);
+  transition: transform 0.2s;
+  transform: rotate(90deg);
+  display: inline-block;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(-90deg);
+}
 
 .resumen {
   font-size: 13px;
