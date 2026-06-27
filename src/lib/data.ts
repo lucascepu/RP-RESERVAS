@@ -308,3 +308,43 @@ export function calcularRegimen(compras: ComprasSummary): RegimenEstado {
 
   return { signals, resumen, tono };
 }
+
+// ── Datos para CalendarioHeatmap ─────────────────────────────────────────────
+
+export interface CalendarioDia {
+  fecha: string;
+  compras: number;
+  mulc: number;
+  pct: number;
+  siopel: number | null;
+}
+
+export async function getCalendarioData(): Promise<CalendarioDia[]> {
+  const [comprasRaw, mulcRaw, fxRaw] = await Promise.all([
+    import('@/data/compras.json').then(m => m.default as {f:string;v:number}[]),
+    import('@/data/mulc.json').then(m => m.default as {f:string;v:number;tc:number}[]),
+    fetch('https://raw.githubusercontent.com/lucascepu/SEGUIMIENTO-FX/main/historical.json', { next: { revalidate: 3600 } })
+      .then(r => r.json())
+      .then((d: {'2026': {date:string;fx:number}[]}) => d['2026'])
+      .catch(() => [] as {date:string;fx:number}[]),
+  ]);
+
+  const comprasMap = new Map(comprasRaw.map(d => [d.f, d.v]));
+  const mulcMap    = new Map(mulcRaw.map(d => [d.f, d.v]));
+  const siopelMap  = new Map(fxRaw.map(d => [d.date, d.fx]));
+
+  const fechas = [...new Set([...comprasMap.keys(), ...mulcMap.keys()])].sort();
+
+  return fechas.map(f => {
+    const compras = comprasMap.get(f) ?? 0;
+    const mulc    = mulcMap.get(f) ?? 0;
+    const pct     = mulc > 0 ? Math.round(compras / mulc * 1000) / 10 : 0;
+    return {
+      fecha: f,
+      compras,
+      mulc,
+      pct,
+      siopel: siopelMap.get(f) ?? null,
+    };
+  });
+}

@@ -1,4 +1,4 @@
-import { getCompras, calcularRegimen } from '@/lib/data';
+import { getCompras, calcularRegimen, getCalendarioData } from '@/lib/data';
 import type { IndicadorSummary } from '@/lib/data';
 import { HITOS } from '@/lib/hitos';
 import DetallePage from '@/components/DetallePage';
@@ -6,7 +6,10 @@ import DetallePage from '@/components/DetallePage';
 export const revalidate = 3600;
 
 export default async function ComprasPage() {
-  const data = await getCompras();
+  const [data, calendarioData] = await Promise.all([
+    getCompras(),
+    getCalendarioData(),
+  ]);
   const hitos = HITOS.filter(h => h.indicador === 'compras' || h.indicador === 'global');
 
   const valores = data.serieCompras.map(d => d.valor);
@@ -44,6 +47,7 @@ export default async function ComprasPage() {
         seriePct: data.seriePct,
       }}
       regimen={regimen}
+      calendarioData={calendarioData}
     />
   );
 }

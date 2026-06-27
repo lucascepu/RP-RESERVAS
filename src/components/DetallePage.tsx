@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import type { RegimenEstado } from '@/lib/data';
+import type { RegimenEstado, CalendarioDia } from '@/lib/data';
 import RegimenPanel from './RegimenPanel';
+import CalendarioHeatmap from './CalendarioHeatmap';
 import {
   ResponsiveContainer, AreaChart, Area,
   ComposedChart, BarChart, Bar, Line,
@@ -85,6 +86,7 @@ interface Props {
   back: string;
   mulcData?: MulcData;
   regimen?: RegimenEstado;
+  calendarioData?: CalendarioDia[];
 }
 
 function ScatterAnalisis({ data, seriePct, accentColor }: {
@@ -193,7 +195,7 @@ function ScatterAnalisis({ data, seriePct, accentColor }: {
 }
 
 export default function DetallePage({
-  titulo, subtitulo, data, hitos, accentColor, tipo, back, mulcData, regimen,
+  titulo, subtitulo, data, hitos, accentColor, tipo, back, mulcData, regimen, calendarioData,
 }: Props) {
   const hoy = new Date().toISOString().slice(0, 10);
   const [rangoIdx, setRangoIdx] = useState(2);
@@ -537,6 +539,11 @@ export default function DetallePage({
             <span style={{ color: '#6e7f8d', fontSize: 11 }}>Prom. 5 ruedas: {mulcData.pctPromedio5}%</span>
           </div>
         </div>
+      )}
+
+      {/* Calendario heatmap */}
+      {calendarioData && calendarioData.length > 0 && (
+        <CalendarioHeatmap datos={calendarioData} />
       )}
 
       {/* Análisis avanzado — Scatter */}
