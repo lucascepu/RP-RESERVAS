@@ -302,6 +302,11 @@ export default function DetallePage({
           <div className={styles.kpiValue} style={{ color: accentColor }}>
             {formatValor(tipo, data.ultimo)}
           </div>
+          {tipo === 'compras' && mulcData && (
+            <div className={styles.kpiMulc}>
+              {mulcData.pctHoy}% del MULC
+            </div>
+          )}
           {tipo !== 'compras' && (
             <div className={styles.kpiDelta} style={{ color: deltaColor }}>
               {sube ? '▲' : '▼'} {Math.abs(data.variacionPct).toFixed(1)}% vs rueda anterior
