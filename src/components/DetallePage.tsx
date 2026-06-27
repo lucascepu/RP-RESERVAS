@@ -312,8 +312,6 @@ export default function DetallePage({
       </header>
 
       {/* Panel MULC */}
-      {regimen && <RegimenPanel estado={regimen} />}
-
       {mulcData && (
         <div className={styles.mulcPanel}>
           <div className={styles.mulcKpis}>
@@ -542,6 +540,7 @@ export default function DetallePage({
       )}
 
       {/* Análisis avanzado — Scatter */}
+      {regimen && <RegimenPanel estado={regimen} />}
       {mulcData && !modoMensual && (
         <ScatterAnalisis data={data.serie} seriePct={mulcData.seriePct} accentColor={accentColor} />
       )}
