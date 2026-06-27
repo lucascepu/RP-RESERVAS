@@ -10,9 +10,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
 }
 
 .titulo {
@@ -23,11 +26,27 @@
   font-family: 'Inter', sans-serif;
 }
 
+.chevron {
+  font-size: 18px;
+  color: var(--text-tertiary);
+  transition: transform 0.2s;
+  transform: rotate(90deg);
+  display: inline-block;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(-90deg);
+}
+
 .leyenda {
   display: flex;
   align-items: center;
   gap: 0.875rem;
   flex-wrap: wrap;
+  margin-top: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .leyendaItem {
