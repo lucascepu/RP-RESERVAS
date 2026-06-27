@@ -403,7 +403,6 @@ export default function DetallePage({
           {tipo === 'compras' && !modoMensual && (
             <div className={styles.maToggle}>
               <button
-                <button
                 className={`${styles.maBtn} ${showMA20 ? styles.maBtnActive : ''}`}
                 onClick={() => setShowMA20(v => !v)}>
                 {showMA20 ? 'Ocultar MA20' : 'MA20'}
