@@ -23,16 +23,21 @@
   border-bottom: 1px solid var(--border);
 }
 
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .titulo {
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 5px;
-  letter-spacing: -0.02em;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: -0.01em;
 }
 
 .subtitulo {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -43,10 +48,11 @@
 
 .kpiValue {
   font-family: 'Inter', sans-serif;
-  font-size: 30px;
-  font-weight: 500;
-  line-height: 1.1;
-  margin-bottom: 5px;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 6px;
+  letter-spacing: -0.03em;
 }
 
 .kpiDelta {
@@ -372,7 +378,11 @@
   }
 
   .kpiValue {
-    font-size: 22px;
+    font-size: 32px;
+  }
+
+  .titulo {
+    font-size: 15px;
   }
 
   /* KPIs panel: 2x2 en mobile */

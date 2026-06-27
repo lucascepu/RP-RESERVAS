@@ -294,9 +294,9 @@ export default function DetallePage({
       </div>
 
       <header className={styles.header}>
-        <div>
-          <h1 className={styles.titulo}>{titulo}</h1>
+        <div className={styles.headerLeft}>
           <p className={styles.subtitulo}>{subtitulo}</p>
+          <h1 className={styles.titulo}>{titulo}</h1>
         </div>
         <div className={styles.kpiBox}>
           <div className={styles.kpiValue} style={{ color: accentColor }}>
