@@ -120,6 +120,45 @@ export default function CalendarioHeatmap({ datos }: Props) {
             })}
           </div>
 
+          {/* Histograma de distribución */}
+          {(() => {
+            const rangos = [
+              { label: 'Venta',     min: -Infinity, max: 0,   color: 'var(--red)' },
+              { label: '0–25 MM',   min: 0,         max: 25,  color: 'rgba(63,185,80,0.25)' },
+              { label: '25–75 MM',  min: 25,        max: 75,  color: 'rgba(63,185,80,0.45)' },
+              { label: '75–150 MM', min: 75,        max: 150, color: 'rgba(63,185,80,0.65)' },
+              { label: '150–300 MM',min: 150,       max: 300, color: 'rgba(63,185,80,0.82)' },
+              { label: '+300 MM',   min: 300,       max: Infinity, color: 'rgba(63,185,80,0.97)' },
+            ];
+            const counts = rangos.map(r => ({
+              ...r,
+              dias: datos.filter(d => d.compras > r.min && d.compras <= r.max).length,
+            }));
+            const maxDias = Math.max(...counts.map(c => c.dias));
+            return (
+              <div className={styles.histoWrap}>
+                <div className={styles.histoTitulo}>Distribución de compras</div>
+                {counts.map((r, i) => (
+                  <div key={i} className={styles.histoBarra}>
+                    <span className={styles.histoLabel}>{r.label}</span>
+                    <div className={styles.histoBarWrap}>
+                      <div
+                        className={styles.histoBarFill}
+                        style={{
+                          width: maxDias > 0 ? `${(r.dias / maxDias) * 100}%` : '0%',
+                          background: r.color,
+                        }}
+                      />
+                    </div>
+                    <span className={styles.histoMeta}>
+                      {r.dias} {r.dias === 1 ? 'día' : 'días'} · {datos.length > 0 ? Math.round(r.dias / datos.length * 100) : 0}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
           {diaSeleccionado && (
             <div className={styles.detalle}>
               <div className={styles.detalleHeader}>
