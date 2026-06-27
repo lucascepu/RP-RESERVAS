@@ -203,7 +203,8 @@ export default function DetallePage({
   const [customHasta, setCustomHasta] = useState('');
   const [modoCustom, setModoCustom] = useState(false);
   const [modoMensual, setModoMensual] = useState(false);
-  const [showMA, setShowMA] = useState(true);
+  const [showMA5, setShowMA5] = useState(false);
+  const [showMA20, setShowMA20] = useState(true);
 
   const { serie, hitosEnRango, totalDias } = useMemo(() => {
     let desde: string;
@@ -346,6 +347,9 @@ export default function DetallePage({
               <div className={styles.mulcKpiValue} style={{ color: 'var(--green)' }}>
                 +{Math.round(mulcData.acumAnio).toLocaleString('es-AR')} MM
               </div>
+              <div className={styles.mulcKpiSub}>
+                {mulcData.pctPromedio5}% prom. MULC
+              </div>
             </div>
           </div>
         </div>
@@ -399,9 +403,15 @@ export default function DetallePage({
           {tipo === 'compras' && !modoMensual && (
             <div className={styles.maToggle}>
               <button
-                className={`${styles.maBtn} ${showMA ? styles.maBtnActive : ''}`}
-                onClick={() => setShowMA(v => !v)}>
-                {showMA ? 'Ocultar MA' : 'Mostrar MA'}
+                <button
+                className={`${styles.maBtn} ${showMA20 ? styles.maBtnActive : ''}`}
+                onClick={() => setShowMA20(v => !v)}>
+                {showMA20 ? 'Ocultar MA20' : 'MA20'}
+              </button>
+              <button
+                className={`${styles.maBtn} ${showMA5 ? styles.maBtnActive : ''}`}
+                onClick={() => setShowMA5(v => !v)}>
+                {showMA5 ? 'Ocultar MA5' : 'MA5'}
               </button>
             </div>
           )}
@@ -467,11 +477,11 @@ export default function DetallePage({
               <Area type="monotone" dataKey="valor" stroke={accentColor} strokeWidth={1.5}
                 fill="url(#areaGrad)" dot={false}
                 activeDot={{ r: 4, fill: accentColor, strokeWidth: 0 }} />
-              {tipo === 'compras' && showMA && (
+              {tipo === 'compras' && showMA5 && (
                 <Line type="monotone" dataKey="ma5" stroke="#d29922" strokeWidth={1.5}
                   dot={false} connectNulls={false} />
               )}
-              {tipo === 'compras' && showMA && (
+              {tipo === 'compras' && showMA20 && (
                 <Line type="monotone" dataKey="ma20" stroke="#58a6ff" strokeWidth={1}
                   dot={false} connectNulls={false} strokeDasharray="4 2" />
               )}
@@ -483,10 +493,14 @@ export default function DetallePage({
           <div className={styles.maLegend}>
             <span style={{ color: 'var(--green)' }}>─── </span>
             <span style={{ color: '#6e7f8d', fontSize: 11 }}>Diario</span>
-            <span style={{ color: '#d29922', marginLeft: 12 }}>─── </span>
-            <span style={{ color: '#6e7f8d', fontSize: 11 }}>MA 5 ruedas</span>
-            <span style={{ color: '#58a6ff', marginLeft: 12 }}>- - - </span>
-            <span style={{ color: '#6e7f8d', fontSize: 11 }}>MA 20 ruedas</span>
+            {showMA5 && (<>
+              <span style={{ color: '#d29922', marginLeft: 12 }}>─── </span>
+              <span style={{ color: '#6e7f8d', fontSize: 11 }}>MA 5 ruedas</span>
+            </>)}
+            {showMA20 && (<>
+              <span style={{ color: '#58a6ff', marginLeft: 12 }}>- - - </span>
+              <span style={{ color: '#6e7f8d', fontSize: 11 }}>MA 20 ruedas</span>
+            </>)}
           </div>
         )}
         {tipo === 'compras' && modoMensual && (

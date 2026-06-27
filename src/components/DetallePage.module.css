@@ -48,11 +48,11 @@
 
 .kpiValue {
   font-family: 'Inter', sans-serif;
-  font-size: 38px;
+  font-size: 52px;
   font-weight: 700;
   line-height: 1;
   margin-bottom: 4px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .kpiMulc {
@@ -385,7 +385,7 @@
   }
 
   .kpiValue {
-    font-size: 28px;
+    font-size: 36px;
   }
 
   .titulo {
