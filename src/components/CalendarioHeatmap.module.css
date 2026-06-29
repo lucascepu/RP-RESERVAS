@@ -139,6 +139,13 @@
   aspect-ratio: 1;
 }
 
+.celdaFeriado {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(255,255,255,0.06);
+}
+
 .celdaDot {
   position: absolute;
   bottom: 2px;

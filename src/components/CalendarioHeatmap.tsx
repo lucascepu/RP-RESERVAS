@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import styles from './CalendarioHeatmap.module.css';
 
 interface DiaData {
@@ -40,8 +40,7 @@ function diasDelMes(anio: number, mes: number): string[] {
   const total = new Date(anio, mes, 0).getDate();
   for (let d = 1; d <= total; d++) {
     const f = `${anio}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const dow = new Date(f).getDay();
-    if (dow !== 0 && dow !== 6) dias.push(f);
+    dias.push(f); // todos los días, incluyendo fines de semana
   }
   return dias;
 }
@@ -78,7 +77,7 @@ export default function CalendarioHeatmap({ datos }: Props) {
           <div className={styles.grid}>
             {meses.map(mesKey => {
               const [anio, mes] = mesKey.split('-').map(Number);
-              const diasHabiles = diasDelMes(anio, mes);
+              const diasTodos = diasDelMes(anio, mes);
               return (
                 <div key={mesKey} className={styles.mes}>
                   <div className={styles.mesLabel}>{MESES[mes - 1]}</div>
@@ -87,34 +86,40 @@ export default function CalendarioHeatmap({ datos }: Props) {
                   </div>
                   <div className={styles.dias}>
                     {(() => {
-                      // Offset basado en el día 1 del mes (no el primer hábil)
-                      const primerDelMes = new Date(`${mesKey}-01T12:00:00`);
-                      const dowPrimerDia = primerDelMes.getDay(); // 0=dom,1=lun...6=sab
-                      // Convertir a columna L-M-X-J-V (lun=0, vie=4)
-                      // Si cae en fin de semana, el primer hábil empieza en lunes
-                      const offset = dowPrimerDia === 0 ? 0 : dowPrimerDia === 6 ? 0 : dowPrimerDia - 1;
-                      const cells = [];
+                      const cells: React.ReactNode[] = [];
+                      // Offset: días vacíos antes del lunes de la primera semana
+                      const primerDia = new Date(`${mesKey}-01T12:00:00`);
+                      const dowPrimer = primerDia.getDay(); // 0=dom,1=lun...6=sab
+                      const offset = dowPrimer === 0 ? 4 : dowPrimer === 6 ? 4 : dowPrimer - 1;
                       for (let i = 0; i < offset; i++) {
                         cells.push(<div key={`off-${i}`} className={styles.celdaVacia} />);
                       }
-                      diasHabiles.forEach(fecha => {
+                      diasTodos.forEach(fecha => {
+                        const jsDay = new Date(fecha + 'T12:00:00').getDay(); // 0=dom,6=sab
+                        // Saltar fines de semana
+                        if (jsDay === 0 || jsDay === 6) return;
                         const d = dataMap.get(fecha);
                         const pct  = d ? d.pct : 0;
                         const comp = d ? d.compras : 0;
-                        const color = getColor(pct, comp);
+                        const color = d ? getColor(pct, comp) : 'transparent';
                         const dot   = getDotColor(comp);
                         const activo = diaSeleccionado?.fecha === fecha;
-                        cells.push(
-                          <div
-                            key={fecha}
-                            className={`${styles.celda} ${activo ? styles.celdaActiva : ''}`}
-                            style={{ background: color }}
-                            onClick={() => setDiaSeleccionado(activo ? null : (d ?? null))}
-                            title={fecha}
-                          >
-                            {d && <span className={styles.celdaDot} style={{ background: dot }} />}
-                          </div>
-                        );
+                        if (d) {
+                          cells.push(
+                            <div
+                              key={fecha}
+                              className={`${styles.celda} ${activo ? styles.celdaActiva : ''}`}
+                              style={{ background: color }}
+                              onClick={() => setDiaSeleccionado(activo ? null : (d ?? null))}
+                              title={fecha}
+                            >
+                              <span className={styles.celdaDot} style={{ background: dot }} />
+                            </div>
+                          );
+                        } else {
+                          // Día hábil sin dato (feriado)
+                          cells.push(<div key={fecha} className={styles.celdaFeriado} />);
+                        }
                       });
                       return cells;
                     })()}
