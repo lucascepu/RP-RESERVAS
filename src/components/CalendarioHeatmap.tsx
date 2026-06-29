@@ -87,8 +87,12 @@ export default function CalendarioHeatmap({ datos }: Props) {
                   </div>
                   <div className={styles.dias}>
                     {(() => {
-                      const primerDia = new Date(diasHabiles[0]);
-                      const offset = primerDia.getDay() - 1;
+                      // Offset basado en el día 1 del mes (no el primer hábil)
+                      const primerDelMes = new Date(`${mesKey}-01T12:00:00`);
+                      const dowPrimerDia = primerDelMes.getDay(); // 0=dom,1=lun...6=sab
+                      // Convertir a columna L-M-X-J-V (lun=0, vie=4)
+                      // Si cae en fin de semana, el primer hábil empieza en lunes
+                      const offset = dowPrimerDia === 0 ? 0 : dowPrimerDia === 6 ? 0 : dowPrimerDia - 1;
                       const cells = [];
                       for (let i = 0; i < offset; i++) {
                         cells.push(<div key={`off-${i}`} className={styles.celdaVacia} />);
@@ -123,11 +127,11 @@ export default function CalendarioHeatmap({ datos }: Props) {
           {/* Histograma de distribución */}
           {(() => {
             const rangos = [
-              { label: 'Venta',     min: -Infinity, max: 0,   color: 'var(--red)' },
-              { label: '0–25 MM',   min: 0,         max: 25,  color: 'rgba(63,185,80,0.25)' },
-              { label: '25–75 MM',  min: 25,        max: 75,  color: 'rgba(63,185,80,0.45)' },
-              { label: '75–150 MM', min: 75,        max: 150, color: 'rgba(63,185,80,0.65)' },
-              { label: '150–300 MM',min: 150,       max: 300, color: 'rgba(63,185,80,0.82)' },
+              { label: 'Venta',     min: -Infinity, max: -0.01, color: 'var(--red)' },
+              { label: '0–25 MM',   min: -0.01,     max: 25,    color: 'rgba(63,185,80,0.25)' },
+              { label: '25–75 MM',  min: 25,        max: 75,    color: 'rgba(63,185,80,0.45)' },
+              { label: '75–150 MM', min: 75,        max: 150,   color: 'rgba(63,185,80,0.65)' },
+              { label: '150–300 MM',min: 150,       max: 300,   color: 'rgba(63,185,80,0.82)' },
               { label: '+300 MM',   min: 300,       max: Infinity, color: 'rgba(63,185,80,0.97)' },
             ];
             const counts = rangos.map(r => ({
