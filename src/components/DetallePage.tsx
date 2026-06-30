@@ -335,11 +335,17 @@ export default function DetallePage({
             </div>
             <div className={styles.mulcKpi}>
               <div className={styles.mulcKpiLabel}>Últ. 5 ruedas</div>
-              <div className={styles.mulcKpiValue} style={{ color: 'var(--green)' }}>
-                +{mulcData.acum5ruedas.toLocaleString('es-AR')} MM
-              </div>
-              <div className={styles.mulcKpiSub}>
-                Vol: {mulcData.vol5ruedas.toLocaleString('es-AR')} MM · {mulcData.pctPromedio5}%
+              <div className={styles.mulcKpiDual}>
+                <div className={styles.mulcKpiDualItem}>
+                  <span className={styles.mulcKpiDualLabel}>Compras</span>
+                  <span className={styles.mulcKpiValue} style={{ color: 'var(--green)' }}>
+                    +{mulcData.acum5ruedas.toLocaleString('es-AR')} MM
+                  </span>
+                </div>
+                <div className={styles.mulcKpiDualItem}>
+                  <span className={styles.mulcKpiDualLabel}>Participación</span>
+                  <span className={styles.mulcKpiValue}>{mulcData.pctPromedio5}%</span>
+                </div>
               </div>
             </div>
             <div className={styles.mulcKpi}>
