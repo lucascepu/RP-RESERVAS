@@ -30,11 +30,13 @@
 }
 
 .subtitulo {
-  font-size: 11px;
-  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   font-family: 'Inter', sans-serif;
+  opacity: 0.85;
 }
 
 .titulo {
@@ -48,7 +50,7 @@
 
 .kpiValue {
   font-family: 'Inter', sans-serif;
-  font-size: 52px;
+  font-size: 62px;
   font-weight: 700;
   line-height: 1;
   margin-bottom: 4px;
@@ -77,31 +79,34 @@
 .rangeRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 0;
   margin-bottom: 1rem;
+  border-bottom: 2px solid rgba(232,145,74,.20);
 }
 
 .rangeBtn {
   font-family: 'Inter', sans-serif;
-  font-size: 12px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: 0;
+  border: none;
+  border-bottom: 2px solid transparent;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   cursor: pointer;
   transition: all 0.12s;
+  margin-bottom: -2px;
 }
 
 .rangeBtn:hover {
-  border-color: var(--border-hover);
   color: var(--text-primary);
 }
 
 .rangeBtn.active {
-  background: var(--bg-hover);
-  border-color: var(--border-hover);
   color: var(--text-primary);
+  border-bottom: 2px solid var(--accent);
+  background: transparent;
 }
 
 .customRow {
@@ -307,21 +312,22 @@
   font-family: 'Inter', sans-serif;
   font-size: 11px;
   font-weight: 500;
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--bg);
+  padding: 4px 12px;
+  border-radius: 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
   transition: all 0.12s;
+  margin-bottom: -2px;
 }
 
-.maBtn:hover { border-color: var(--border-hover); color: var(--text-secondary); }
+.maBtn:hover { color: var(--text-secondary); }
 
 .maBtnActive {
-  border-color: var(--border-hover);
   color: var(--text-primary);
-  background: var(--bg-hover);
+  border-bottom: 2px solid var(--accent);
 }
 
 .maLegend {
@@ -404,7 +410,7 @@
   }
 
   .kpiValue {
-    font-size: 36px;
+    font-size: 40px;
   }
 
   .titulo {
