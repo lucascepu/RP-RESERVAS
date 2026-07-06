@@ -46,7 +46,7 @@ export default async function Home() {
             variacion={rpData.variacion}
             variacionPct={rpData.variacionPct}
             href="/riesgo-pais"
-            accentColor="#a78bfa"
+            accentColor="var(--border-hover)"
             invertLogic={true}
             badge={rpData.badge}
             subInfo={`YTD: ${fmtDelta(rpData.ytd, 'pbs')} · MTD: ${fmtDelta(rpData.mtd, 'pbs')}`}
@@ -61,7 +61,7 @@ export default async function Home() {
             variacion={Math.round(resData.variacion)}
             variacionPct={resData.variacionPct}
             href="/reservas"
-            accentColor="var(--blue)"
+            accentColor="var(--border-hover)"
             subInfo={`MTD: ${fmtDelta(resData.mtd)} · YTD: ${fmtDelta(resData.ytd)}`}
           />
         ) : <CardError label="Reservas" />}
