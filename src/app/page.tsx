@@ -61,7 +61,7 @@ export default async function Home() {
             variacion={Math.round(resData.variacion)}
             variacionPct={resData.variacionPct}
             href="/reservas"
-            accentColor="var(--accent)"
+            accentColor="var(--blue)"
             subInfo={`MTD: ${fmtDelta(resData.mtd)} · YTD: ${fmtDelta(resData.ytd)}`}
           />
         ) : <CardError label="Reservas" />}

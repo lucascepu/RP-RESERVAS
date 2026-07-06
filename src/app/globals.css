@@ -27,10 +27,11 @@
   --teal:   #5DCAA5;
   --coral:  #F0997B;
   --gray:   #B4B2A9;
+  --orange: #E8914A;
   --fill-blue: rgba(120,174,222,.13);
 
   /* ── Alias backward-compat ── */
-  --accent: var(--blue);  /* usado en page.tsx como prop accentColor */
+  --accent: var(--orange);  /* UI elements — tabs, badges, focus, botones activos */
 
   /* ── Tipografía ── */
   --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
