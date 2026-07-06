@@ -14,7 +14,7 @@ export default async function ReservasPage() {
       subtitulo="BCRA · brutas · millones de USD"
       data={data}
       hitos={hitos}
-      accentColor="var(--blue)"
+      accentColor="var(--text-secondary)"
       tipo="reservas"
       back="/"
     />
