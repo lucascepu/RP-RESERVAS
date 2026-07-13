@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import styles from './admin.module.css';
 
 type Ultimo = { f: string; v: number } | null;
-type Estado = 'idle' | 'ok' | 'error';
+type Estado = 'idle' | 'loading' | 'ok' | 'error';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -28,9 +28,9 @@ export default function AdminPage() {
 
   const [estado, setEstado] = useState<Estado>('idle');
   const [guardados, setGuardados] = useState<string[]>([]);
+  const [errores, setErrores] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (!autenticado) return;
+  const fetchUltimos = () => {
     Promise.all([
       fetch('/api/reservas').then(r => r.json()),
       fetch('/api/compras').then(r => r.json()),
@@ -39,7 +39,9 @@ export default function AdminPage() {
     ]).then(([res, comp, rp, mulc]) => {
       setUltimos({ reservas: res.ultimo, compras: comp.ultimo, rp: rp.ultimo, mulc: mulc.ultimo });
     });
-  }, [autenticado]);
+  };
+
+  useEffect(() => { if (autenticado) fetchUltimos(); }, [autenticado]);
 
   const handlePinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,62 +50,51 @@ export default function AdminPage() {
   };
 
   const handleGuardarTodo = async () => {
-    setEstado('idle');
+    const hayAlgo = reservas || compraValor || rp || mulc;
+    if (!hayAlgo) return;
+
+    setEstado('loading');
     setGuardados([]);
+    setErrores([]);
 
-    const post = async (url: string, valor: number, label: string): Promise<string | null> => {
-      try {
-        const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pin, fecha, valor }) });
-        return r.ok ? label : null;
-      } catch { return null; }
-    };
+    const comprasValor = compraValor
+      ? (signo === 'venta' ? -Math.abs(parseFloat(compraValor)) : Math.abs(parseFloat(compraValor)))
+      : undefined;
 
-    const ok: string[] = [];
+    const body: Record<string, unknown> = { pin, fecha };
+    if (reservas)    body.reservas = parseFloat(reservas.replace(',', '.'));
+    if (compraValor) body.compras  = comprasValor;
+    if (rp)          body.rp       = parseFloat(rp.replace(',', '.'));
+    if (mulc)        body.mulc     = parseFloat(mulc.replace(',', '.'));
 
-    if (reservas) {
-      const v = parseFloat(reservas.replace(',', '.'));
-      if (!isNaN(v)) { const r = await post('/api/reservas', v, 'Reservas'); if (r) ok.push(r); }
-    }
-
-    if (compraValor) {
-      const v = parseFloat(compraValor.replace(',', '.'));
-      if (!isNaN(v)) {
-        const valorFinal = signo === 'venta' ? -Math.abs(v) : Math.abs(v);
-        const r = await post('/api/compras', valorFinal, 'Compras');
-        if (r) ok.push(r);
-      }
-    }
-
-    if (rp) {
-      const v = parseFloat(rp.replace(',', '.'));
-      if (!isNaN(v)) { const r = await post('/api/riesgo-pais', v, 'Riesgo País'); if (r) ok.push(r); }
-    }
-
-    if (mulc) {
-      const v = parseFloat(mulc.replace(',', '.'));
-      if (!isNaN(v)) { const r = await post('/api/mulc', v, 'MULC'); if (r) ok.push(r); }
-    }
-
-    const errores = [reservas, compraValor, rp, mulc].filter(Boolean).length - ok.length;
-
-    if (errores > 0) { setEstado('error'); }
-    else if (ok.length > 0) { setEstado('ok'); }
-
-    setGuardados(ok);
-    if (ok.length > 0) {
-      setReservas(''); setCompraValor(''); setRp(''); setMulc('');
-      // Refrescar últimos
-      Promise.all([
-        fetch('/api/reservas').then(r => r.json()),
-        fetch('/api/compras').then(r => r.json()),
-        fetch('/api/riesgo-pais').then(r => r.json()),
-        fetch('/api/mulc').then(r => r.json()),
-      ]).then(([res, comp, rp, mulc]) => {
-        setUltimos({ reservas: res.ultimo, compras: comp.ultimo, rp: rp.ultimo, mulc: mulc.ultimo });
+    try {
+      const res = await fetch('/api/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setEstado('error');
+        setErrores(['Error de servidor']);
+        return;
+      }
+
+      setGuardados(data.ok ?? []);
+      setErrores(data.errores ?? []);
+      setEstado(data.errores?.length > 0 ? 'error' : 'ok');
+
+      if ((data.ok ?? []).length > 0) {
+        setReservas(''); setCompraValor(''); setRp(''); setMulc('');
+        fetchUltimos();
+      }
+    } catch {
+      setEstado('error');
+      setErrores(['Error de conexión']);
     }
-    setTimeout(() => { setEstado('idle'); setGuardados([]); }, 4000);
+
+    setTimeout(() => { setEstado('idle'); setGuardados([]); setErrores([]); }, 5000);
   };
 
   const hayAlgo = reservas || compraValor || rp || mulc;
@@ -132,23 +123,19 @@ export default function AdminPage() {
     <main className={styles.main}>
       <div className={styles.wrapper}>
 
-        {/* Tabs */}
         <div className={styles.tabs}>
           <button className={`${styles.tab} ${styles.tabActivo}`}>Carga</button>
           <button className={styles.tab} onClick={() => router.push('/export')}>Exportar</button>
         </div>
 
-        {/* Fila compacta */}
         <div className={styles.filaCompacta}>
 
-          {/* Fecha */}
           <div className={styles.campo}>
             <label className={styles.campoLabel}>Fecha</label>
             <input type="date" value={fecha} max={hoy}
               onChange={e => setFecha(e.target.value)} className={styles.input} />
           </div>
 
-          {/* Reservas */}
           <div className={styles.campo}>
             <label className={styles.campoLabel}>
               Reservas <span className={styles.campoUlt}>{ultimos.reservas ? `últ: ${ultimos.reservas.v.toLocaleString('es-AR')}` : ''}</span>
@@ -157,7 +144,6 @@ export default function AdminPage() {
               onChange={e => setReservas(e.target.value)} className={styles.input} />
           </div>
 
-          {/* Compras */}
           <div className={styles.campo}>
             <label className={styles.campoLabel}>
               Compras <span className={styles.campoUlt}>{ultimos.compras ? `últ: ${ultimos.compras.v > 0 ? '+' : ''}${ultimos.compras.v}` : ''}</span>
@@ -174,7 +160,6 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Riesgo País */}
           <div className={styles.campo}>
             <label className={styles.campoLabel}>
               Riesgo País <span className={styles.campoUlt}>{ultimos.rp ? `últ: ${ultimos.rp.v}` : ''}</span>
@@ -183,7 +168,6 @@ export default function AdminPage() {
               onChange={e => setRp(e.target.value)} className={styles.input} />
           </div>
 
-          {/* MULC */}
           <div className={styles.campo}>
             <label className={styles.campoLabel}>
               Vol. MULC <span className={styles.campoUlt}>{ultimos.mulc ? `últ: ${ultimos.mulc.v}` : ''}</span>
@@ -192,27 +176,29 @@ export default function AdminPage() {
               onChange={e => setMulc(e.target.value)} className={styles.input} />
           </div>
 
-          {/* Botón */}
           <div className={styles.campo}>
             <label className={styles.campoLabel}>&nbsp;</label>
-            <button className={styles.guardar} onClick={handleGuardarTodo} disabled={!hayAlgo}>
-              Guardar todo
+            <button
+              className={styles.guardar}
+              onClick={handleGuardarTodo}
+              disabled={!hayAlgo || estado === 'loading'}>
+              {estado === 'loading' ? 'Guardando...' : 'Guardar todo'}
             </button>
           </div>
 
         </div>
 
-        {/* Feedback */}
         {estado === 'ok' && guardados.length > 0 && (
           <div className={styles.feedback}>
             ✓ Guardado: {guardados.join(' · ')}
           </div>
         )}
         {estado === 'error' && (
-          <div className={styles.feedbackError}>Error al guardar. Intentá de nuevo.</div>
+          <div className={styles.feedbackError}>
+            Error al guardar: {errores.join(', ')}
+          </div>
         )}
 
-        {/* Hint MULC */}
         <div className={styles.hint}>
           Vol. MULC: sumar <strong>USMEP + UST$T + USB$T</strong> en MAE Mayorista
         </div>
