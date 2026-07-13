@@ -2,7 +2,7 @@ import { getRiesgoPais } from '@/lib/data';
 import { HITOS } from '@/lib/hitos';
 import DetallePage from '@/components/DetallePage';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 export default async function RiesgoPaisPage() {
   const data = await getRiesgoPais();

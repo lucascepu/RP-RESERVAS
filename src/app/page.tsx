@@ -3,7 +3,7 @@ import KpiCard from '@/components/KpiCard';
 import HitosPanel from '@/components/HitosPanel';
 import styles from './page.module.css';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 function fmtDelta(v: number, unit = 'MM') {
   const sign = v >= 0 ? '+' : '';

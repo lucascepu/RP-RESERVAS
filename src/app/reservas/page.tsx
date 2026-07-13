@@ -2,7 +2,7 @@ import { getReservas } from '@/lib/data';
 import { HITOS } from '@/lib/hitos';
 import DetallePage from '@/components/DetallePage';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 export default async function ReservasPage() {
   const data = await getReservas();
