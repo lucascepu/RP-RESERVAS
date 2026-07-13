@@ -51,55 +51,44 @@ export default function AdminPage() {
     setEstado('idle');
     setGuardados([]);
 
-    const tareas: Promise<string | null>[] = [];
+    const post = async (url: string, valor: number, label: string): Promise<string | null> => {
+      try {
+        const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin, fecha, valor }) });
+        return r.ok ? label : null;
+      } catch { return null; }
+    };
+
+    const ok: string[] = [];
 
     if (reservas) {
       const v = parseFloat(reservas.replace(',', '.'));
-      if (!isNaN(v)) tareas.push(
-        fetch('/api/reservas', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pin, fecha, valor: v }) })
-          .then(r => r.ok ? 'Reservas' : null)
-      );
+      if (!isNaN(v)) { const r = await post('/api/reservas', v, 'Reservas'); if (r) ok.push(r); }
     }
 
     if (compraValor) {
       const v = parseFloat(compraValor.replace(',', '.'));
       if (!isNaN(v)) {
         const valorFinal = signo === 'venta' ? -Math.abs(v) : Math.abs(v);
-        tareas.push(
-          fetch('/api/compras', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pin, fecha, valor: valorFinal }) })
-            .then(r => r.ok ? 'Compras' : null)
-        );
+        const r = await post('/api/compras', valorFinal, 'Compras');
+        if (r) ok.push(r);
       }
     }
 
     if (rp) {
       const v = parseFloat(rp.replace(',', '.'));
-      if (!isNaN(v)) tareas.push(
-        fetch('/api/riesgo-pais', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pin, fecha, valor: v }) })
-          .then(r => r.ok ? 'Riesgo País' : null)
-      );
+      if (!isNaN(v)) { const r = await post('/api/riesgo-pais', v, 'Riesgo País'); if (r) ok.push(r); }
     }
 
     if (mulc) {
       const v = parseFloat(mulc.replace(',', '.'));
-      if (!isNaN(v)) tareas.push(
-        fetch('/api/mulc', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pin, fecha, valor: v }) })
-          .then(r => r.ok ? 'MULC' : null)
-      );
+      if (!isNaN(v)) { const r = await post('/api/mulc', v, 'MULC'); if (r) ok.push(r); }
     }
 
-    if (tareas.length === 0) return;
-
-    const resultados = await Promise.all(tareas);
-    const ok = resultados.filter(Boolean) as string[];
-    const errores = resultados.filter(r => r === null).length;
+    const errores = [reservas, compraValor, rp, mulc].filter(Boolean).length - ok.length;
 
     if (errores > 0) { setEstado('error'); }
-    else { setEstado('ok'); }
+    else if (ok.length > 0) { setEstado('ok'); }
 
     setGuardados(ok);
     if (ok.length > 0) {
