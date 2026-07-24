@@ -214,56 +214,67 @@
 }
 
 .mulcPanel {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 0.875rem 1.25rem;
   margin-bottom: 1.25rem;
+}
+
+.mulcSep {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  margin: 0 0 0 0;
 }
 
 .mulcKpis {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-  justify-items: center;
+  grid-template-columns: 1fr 1px 1fr 1px 1fr 1px 1fr;
+  align-items: stretch;
+  padding: 12px 0;
+}
+
+.mulcVsep {
+  background: rgba(255,255,255,0.08);
+  align-self: center;
+  height: 36px;
 }
 
 .mulcKpi {
-  width: 100%;
-  padding: 0.25rem 1rem;
-  border-right: 1px solid var(--border);
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0 20px;
+  min-height: 52px;
 }
 
-.mulcKpi:first-child { padding-left: 1rem; }
-.mulcKpi:last-child { border-right: none; }
+.mulcKpi:first-child { padding-left: 0; }
+.mulcKpi:last-child  { padding-right: 0; }
 
 .mulcKpiLabel {
-  font-size: 11px;
+  font-size: 9px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-tertiary);
-  margin-bottom: 4px;
+  letter-spacing: 0.09em;
+  color: var(--accent);
+  opacity: 0.8;
+  margin-bottom: 2px;
 }
 
 .mulcKpiValue {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 600;
+  line-height: 1;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
+  margin-bottom: 3px;
 }
 
 .mulcKpiSub {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-tertiary);
-  margin-top: 4px;
   font-variant-numeric: tabular-nums;
 }
 
 .mulcKpiDual {
   display: flex;
   gap: 14px;
-  justify-content: center;
 }
 
 .mulcKpiDualItem {
@@ -417,43 +428,30 @@
     font-size: 20px;
   }
 
-  /* KPIs panel: 2x2 en mobile */
+  /* KPIs panel mobile: 2x2 */
   .mulcKpis {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1px 1fr;
+    flex-wrap: wrap;
+    padding: 10px 0;
   }
 
   .mulcKpi {
-    padding: 0.5rem 0.75rem;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    text-align: left;
+    padding: 8px 12px;
+    min-height: auto;
   }
 
-  /* Bordes 2x2: quitar bottom de últimas 2 */
-  .mulcKpi:nth-child(3),
-  .mulcKpi:nth-child(4) {
-    border-bottom: none;
-  }
+  .mulcKpi:first-child { padding-left: 0; }
+  .mulcKpi:last-child  { padding-right: 0; }
 
-  /* Separador vertical entre columnas */
-  .mulcKpi:nth-child(odd) {
-    border-right: 1px solid var(--border);
+  .mulcVsep {
+    height: 28px;
   }
 
   .mulcKpiValue {
     font-size: 16px;
   }
 
-  .mulcKpiDual {
-    gap: 8px;
-    justify-content: flex-start;
-  }
-
-  .mulcKpi {
-    text-align: left;
-  }
-
   .mulcPanel {
-    padding: 0.75rem 1rem;
+    padding: 0;
   }
 }

@@ -322,6 +322,7 @@ export default function DetallePage({
       {/* Panel MULC */}
       {mulcData && (
         <div className={styles.mulcPanel}>
+          <div className={styles.mulcSep} />
           <div className={styles.mulcKpis}>
             <div className={styles.mulcKpi}>
               <div className={styles.mulcKpiLabel}>% MULC últ. rueda</div>
@@ -329,10 +330,12 @@ export default function DetallePage({
                 {mulcData.pctHoy}%
               </div>
             </div>
+            <div className={styles.mulcVsep} />
             <div className={styles.mulcKpi}>
               <div className={styles.mulcKpiLabel}>Vol. MULC últ. rueda</div>
               <div className={styles.mulcKpiValue}>{mulcData.volHoy.toLocaleString('es-AR')} MM</div>
             </div>
+            <div className={styles.mulcVsep} />
             <div className={styles.mulcKpi}>
               <div className={styles.mulcKpiLabel}>Últ. 5 ruedas</div>
               <div className={styles.mulcKpiDual}>
@@ -348,6 +351,7 @@ export default function DetallePage({
                 </div>
               </div>
             </div>
+            <div className={styles.mulcVsep} />
             <div className={styles.mulcKpi}>
               <div className={styles.mulcKpiLabel}>Acum. 2026</div>
               <div className={styles.mulcKpiValue} style={{ color: 'var(--green)' }}>
